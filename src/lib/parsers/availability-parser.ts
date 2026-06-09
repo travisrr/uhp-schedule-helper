@@ -34,6 +34,51 @@ function findColumnIndex(headerRow: string[], ...labels: string[]): number {
   });
 }
 
+function isDayColumn(headerRow: string[], index: number): boolean {
+  return normalizeDayHeader(headerRow[index] ?? "") !== null;
+}
+
+function isNonRoleColumn(header: string): boolean {
+  const lower = header.toLowerCase();
+  return (
+    lower.includes("shift") ||
+    lower.includes("total") ||
+    lower.includes("hours") ||
+    lower.includes("employee")
+  );
+}
+
+function findRoleColumnIndex(
+  headerRow: string[],
+  employeeIndex: number,
+): number {
+  const explicit = findColumnIndex(
+    headerRow,
+    "role",
+    "position",
+    "job code",
+    "job title",
+    "job class",
+    "primary job",
+    "job",
+    "title",
+    "ratings",
+    "classification",
+  );
+  if (explicit >= 0) return explicit;
+
+  if (employeeIndex < 0) return -1;
+
+  for (let index = employeeIndex + 1; index < headerRow.length; index++) {
+    if (isDayColumn(headerRow, index)) break;
+    const header = headerRow[index]?.trim() ?? "";
+    if (header && isNonRoleColumn(header)) continue;
+    return index;
+  }
+
+  return -1;
+}
+
 function isStaffingGuideBoundary(row: string[]): boolean {
   if (rowIncludes(row, "staffing guide")) return true;
   if (rowIncludes(row, "meal period")) return true;
@@ -89,7 +134,10 @@ export function parseAvailabilitySheet(rows: RawSheet): AvailabilityData {
   const dayColumns = mapDayColumns(headerRow);
 
   const employeeIndex = findColumnIndex(headerRow, "employee");
-  const roleIndex = findColumnIndex(headerRow, "role");
+  const roleIndex = findRoleColumnIndex(
+    headerRow,
+    employeeIndex >= 0 ? employeeIndex : 0,
+  );
   const shiftsIndex = findColumnIndex(
     headerRow,
     "number of shifts",

@@ -16,6 +16,7 @@ const STORAGE_KEY = "uhp-schedule-helper-data";
 interface AppDataContextValue extends AppDataState {
   setAvailability: (data: AvailabilityData | null) => void;
   setSchedule: (data: ScheduleData | null) => void;
+  removeAvailabilityEmployee: (index: number) => void;
   clearAvailability: () => void;
   clearSchedule: () => void;
   clearAll: () => void;
@@ -62,6 +63,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, schedule }));
   }, []);
 
+  const removeAvailabilityEmployee = useCallback((index: number) => {
+    setState((prev) => {
+      if (!prev.availability) return prev;
+      const employees = prev.availability.employees.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        availability: employees.length > 0 ? { employees } : null,
+      };
+    });
+  }, []);
+
   const clearAvailability = useCallback(() => {
     setState((prev) => ({ ...prev, availability: null }));
   }, []);
@@ -79,6 +91,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       ...state,
       setAvailability,
       setSchedule,
+      removeAvailabilityEmployee,
       clearAvailability,
       clearSchedule,
       clearAll,
@@ -87,6 +100,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       state,
       setAvailability,
       setSchedule,
+      removeAvailabilityEmployee,
       clearAvailability,
       clearSchedule,
       clearAll,
