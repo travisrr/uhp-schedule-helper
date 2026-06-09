@@ -49,10 +49,14 @@ export interface ScheduleMetrics {
 export interface ScheduleData {
   metrics: ScheduleMetrics;
   generatedAt?: string | null;
+  /** ISO date (YYYY-MM-DD) for the Wednesday starting this Wed–Tue week. */
+  weekStartDate?: string | null;
   days: ScheduleDay[];
 }
 
 export interface AppDataState {
   availability: AvailabilityData | null;
   schedule: ScheduleData | null;
+  /** ISO date (YYYY-MM-DD) for the selected Wed–Tue scheduling week. */
+  selectedWeekStart: string | null;
 }

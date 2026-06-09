@@ -2,6 +2,7 @@
 
 import { useAppData } from "@/context/data-context";
 import { DAY_LABELS, DAYS } from "@/lib/utils";
+import { formatWeekRange, parseISODateString } from "@/lib/week-utils";
 import type { MealPeriodBlock } from "@/lib/types";
 
 function MealPeriodTable({ block }: { block: MealPeriodBlock }) {
@@ -84,7 +85,8 @@ export function ScheduleWeekView() {
     return (
       <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-100/50 dark:border-zinc-800 dark:bg-zinc-950/50">
         <p className="text-sm text-zinc-500">
-          Upload a weekly schedule report in Settings to populate shift assignments.
+          Select a week above and generate a schedule from availability, or upload a
+          weekly schedule report in Settings.
         </p>
       </div>
     );
@@ -110,11 +112,12 @@ export function ScheduleWeekView() {
         <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
           Shift Report
         </h2>
-        {schedule.generatedAt ? (
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Generated on: {schedule.generatedAt}
-          </p>
-        ) : null}
+        <div className="space-y-0.5 text-sm text-zinc-600 dark:text-zinc-400">
+          {schedule.weekStartDate ? (
+            <p>Week: {formatWeekRange(parseISODateString(schedule.weekStartDate))}</p>
+          ) : null}
+          {schedule.generatedAt ? <p>Generated on: {schedule.generatedAt}</p> : null}
+        </div>
       </div>
 
       {orderedDays.map((day) => {

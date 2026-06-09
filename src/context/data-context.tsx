@@ -10,12 +10,14 @@ import {
   type ReactNode,
 } from "react";
 import type { AppDataState, AvailabilityData, ScheduleData } from "@/lib/types";
+import { getDefaultWeekStart, toISODateString } from "@/lib/week-utils";
 
 const STORAGE_KEY = "uhp-schedule-helper-data";
 
 interface AppDataContextValue extends AppDataState {
   setAvailability: (data: AvailabilityData | null) => void;
   setSchedule: (data: ScheduleData | null) => void;
+  setSelectedWeekStart: (weekStart: string | null) => void;
   removeAvailabilityEmployee: (index: number) => void;
   clearAvailability: () => void;
   clearSchedule: () => void;
@@ -24,25 +26,36 @@ interface AppDataContextValue extends AppDataState {
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
 
+function createEmptyState(): AppDataState {
+  return {
+    availability: null,
+    schedule: null,
+    selectedWeekStart: toISODateString(getDefaultWeekStart()),
+  };
+}
+
 function loadStoredState(): AppDataState {
   if (typeof window === "undefined") {
-    return { availability: null, schedule: null };
+    return createEmptyState();
   }
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { availability: null, schedule: null };
-    return JSON.parse(raw) as AppDataState;
+    if (!raw) return createEmptyState();
+    const parsed = JSON.parse(raw) as Partial<AppDataState>;
+    return {
+      availability: parsed.availability ?? null,
+      schedule: parsed.schedule ?? null,
+      selectedWeekStart:
+        parsed.selectedWeekStart ?? toISODateString(getDefaultWeekStart()),
+    };
   } catch {
-    return { availability: null, schedule: null };
+    return createEmptyState();
   }
 }
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AppDataState>({
-    availability: null,
-    schedule: null,
-  });
+  const [state, setState] = useState<AppDataState>(createEmptyState);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -61,6 +74,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   const setSchedule = useCallback((schedule: ScheduleData | null) => {
     setState((prev) => ({ ...prev, schedule }));
+  }, []);
+
+  const setSelectedWeekStart = useCallback((selectedWeekStart: string | null) => {
+    setState((prev) => ({ ...prev, selectedWeekStart }));
   }, []);
 
   const removeAvailabilityEmployee = useCallback((index: number) => {
@@ -83,7 +100,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearAll = useCallback(() => {
-    setState({ availability: null, schedule: null });
+    setState(createEmptyState());
   }, []);
 
   const value = useMemo(
@@ -91,6 +108,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       ...state,
       setAvailability,
       setSchedule,
+      setSelectedWeekStart,
       removeAvailabilityEmployee,
       clearAvailability,
       clearSchedule,
@@ -100,6 +118,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       state,
       setAvailability,
       setSchedule,
+      setSelectedWeekStart,
       removeAvailabilityEmployee,
       clearAvailability,
       clearSchedule,
