@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AvailabilityUploadReview } from "@/components/availability/availability-upload-review";
 import { AppShell } from "@/components/layout/app-shell";
 import {
   ErrorMessage,
@@ -10,9 +11,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAppData } from "@/context/data-context";
+import { computeAvailabilityDiff } from "@/lib/availability-diff";
 import { readFileAsNamedSheets } from "@/lib/file-ingest";
 import { parseAvailabilityWorkbook } from "@/lib/parsers/availability-parser";
 import { parseScheduleSheet } from "@/lib/parsers/schedule-parser";
+import type { AvailabilityData } from "@/lib/types";
 
 export function SettingsPageContent() {
   const {
@@ -27,6 +30,19 @@ export function SettingsPageContent() {
   const [scheduleFile, setScheduleFile] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingAvailabilityUpload, setPendingAvailabilityUpload] = useState<{
+    fileName: string;
+    data: AvailabilityData;
+  } | null>(null);
+
+  function applyAvailabilityUpload(fileName: string, data: AvailabilityData) {
+    setAvailability(data);
+    setAvailabilityFile(fileName);
+    setSuccess(
+      `Availability loaded: ${data.employees.length} employees from all workbook tabs.`,
+    );
+    setError(null);
+  }
 
   return (
     <AppShell
@@ -47,12 +63,15 @@ export function SettingsPageContent() {
             }}
             lastUploaded={availabilityFile}
             onSuccess={(fileName, data) => {
-              setAvailability(data);
-              setAvailabilityFile(fileName);
-              setSuccess(
-                `Availability loaded: ${data.employees.length} employees from all workbook tabs.`,
-              );
-              setError(null);
+              const diff = computeAvailabilityDiff(availability, data);
+              if (diff.needsReview) {
+                setPendingAvailabilityUpload({ fileName, data });
+                setSuccess(null);
+                setError(null);
+                return;
+              }
+
+              applyAvailabilityUpload(fileName, data);
             }}
             onError={(message) => {
               setError(message);
@@ -111,6 +130,27 @@ export function SettingsPageContent() {
             Clear all data
           </Button>
         </div>
+
+        {pendingAvailabilityUpload ? (
+          <AvailabilityUploadReview
+            open
+            fileName={pendingAvailabilityUpload.fileName}
+            diff={computeAvailabilityDiff(
+              availability,
+              pendingAvailabilityUpload.data,
+            )}
+            onAccept={() => {
+              const { fileName, data } = pendingAvailabilityUpload;
+              applyAvailabilityUpload(fileName, data);
+              setPendingAvailabilityUpload(null);
+            }}
+            onReject={() => {
+              setPendingAvailabilityUpload(null);
+              setSuccess("Upload discarded. Existing availability roster kept.");
+              setError(null);
+            }}
+          />
+        ) : null}
       </div>
     </AppShell>
   );
