@@ -14,14 +14,8 @@ export interface EmployeeAvailability {
   totalShifts: number | null;
 }
 
-export interface StaffingGuideRow {
-  mealPeriod: "Only AM" | "Only PM" | string;
-  days: Record<DayKey, number | null>;
-}
-
 export interface AvailabilityData {
   employees: EmployeeAvailability[];
-  staffingGuide: StaffingGuideRow[];
 }
 
 export interface ShiftAssignment {

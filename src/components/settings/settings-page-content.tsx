@@ -39,14 +39,14 @@ export function SettingsPageContent() {
         <div className="grid gap-6 lg:grid-cols-2">
           <FileDropzone
             label="Availability Ingestion"
-            description="Employee, Ratings, Wed–Tue availability, shift counts, and Staffing Guide sub-table."
+            description="Employee, Ratings, Wed–Tue availability, and shift counts. Staffing Guide rows are ignored."
             parse={parseAvailabilitySheet}
             lastUploaded={availabilityFile}
             onSuccess={(fileName, data) => {
               setAvailability(data);
               setAvailabilityFile(fileName);
               setSuccess(
-                `Availability loaded: ${data.employees.length} employees, ${data.staffingGuide.length} staffing guide rows.`,
+                `Availability loaded: ${data.employees.length} employees.`,
               );
               setError(null);
             }}

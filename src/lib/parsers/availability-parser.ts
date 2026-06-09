@@ -1,8 +1,4 @@
-import type {
-  AvailabilityData,
-  EmployeeAvailability,
-  StaffingGuideRow,
-} from "../types";
+import type { AvailabilityData, EmployeeAvailability } from "../types";
 import { DAYS, type DayKey } from "../utils";
 import {
   findRowIndex,
@@ -38,6 +34,15 @@ function findColumnIndex(headerRow: string[], ...labels: string[]): number {
   });
 }
 
+function isStaffingGuideBoundary(row: string[]): boolean {
+  if (rowIncludes(row, "staffing guide")) return true;
+  if (rowIncludes(row, "meal period")) return true;
+  return row.some((cell) => {
+    const normalized = cell.toLowerCase().replace(/\s+/g, " ").trim();
+    return normalized.includes("staffing guide");
+  });
+}
+
 function parseEmployeeRow(
   row: string[],
   dayColumns: Partial<Record<DayKey, number>>,
@@ -46,7 +51,14 @@ function parseEmployeeRow(
   shiftsIndex: number,
 ): EmployeeAvailability | null {
   const employee = row[employeeIndex]?.trim();
-  if (!employee || employee.toLowerCase().includes("staffing guide")) {
+  const employeeLower = employee.toLowerCase();
+  if (
+    !employee ||
+    employeeLower.includes("staffing guide") ||
+    employeeLower === "only am" ||
+    employeeLower === "only pm" ||
+    employeeLower === "meal period"
+  ) {
     return null;
   }
 
@@ -71,53 +83,6 @@ function parseEmployeeRow(
   };
 }
 
-function parseStaffingGuide(
-  rows: RawSheet,
-  startIndex: number,
-  dayColumns: Partial<Record<DayKey, number>>,
-): StaffingGuideRow[] {
-  const guideRows: StaffingGuideRow[] = [];
-  const mealPeriodIndex = findRowIndex(rows.slice(startIndex), (row) =>
-    rowIncludes(row, "meal period"),
-  );
-
-  const headerOffset =
-    mealPeriodIndex >= 0 ? startIndex + mealPeriodIndex : startIndex;
-  const headerRow = rows[headerOffset] ?? [];
-
-  const resolvedDayColumns =
-    Object.keys(dayColumns).length > 0
-      ? dayColumns
-      : mapDayColumns(headerRow);
-
-  const periodCol =
-    findColumnIndex(headerRow, "meal period", "meal") >= 0
-      ? findColumnIndex(headerRow, "meal period", "meal")
-      : 0;
-
-  for (let i = headerOffset + 1; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row || row.every((cell) => !cell.trim())) continue;
-
-    const mealPeriod = row[periodCol]?.trim();
-    if (!mealPeriod) continue;
-    if (/employee|rating|total/i.test(mealPeriod)) break;
-
-    const days = DAYS.reduce(
-      (acc, day) => {
-        const col = resolvedDayColumns[day];
-        acc[day] = col !== undefined ? parseNumber(row[col] ?? "") : null;
-        return acc;
-      },
-      {} as Record<DayKey, number | null>,
-    );
-
-    guideRows.push({ mealPeriod, days });
-  }
-
-  return guideRows;
-}
-
 export function parseAvailabilitySheet(rows: RawSheet): AvailabilityData {
   const headerIndex = findHeaderRow(rows);
   const headerRow = rows[headerIndex] ?? [];
@@ -133,16 +98,12 @@ export function parseAvailabilitySheet(rows: RawSheet): AvailabilityData {
   );
 
   const employees: EmployeeAvailability[] = [];
-  let staffingStart = rows.length;
 
   for (let i = headerIndex + 1; i < rows.length; i++) {
     const row = rows[i];
     if (!row) continue;
 
-    if (rowIncludes(row, "staffing guide")) {
-      staffingStart = i;
-      break;
-    }
+    if (isStaffingGuideBoundary(row)) break;
 
     const parsed = parseEmployeeRow(
       row,
@@ -154,7 +115,5 @@ export function parseAvailabilitySheet(rows: RawSheet): AvailabilityData {
     if (parsed) employees.push(parsed);
   }
 
-  const staffingGuide = parseStaffingGuide(rows, staffingStart, dayColumns);
-
-  return { employees, staffingGuide };
+  return { employees };
 }
