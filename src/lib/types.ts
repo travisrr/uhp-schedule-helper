@@ -35,6 +35,7 @@ export interface MealPeriodBlock {
 
 export interface ScheduleDay {
   day: DayKey;
+  dateLabel?: string | null;
   mealPeriods: MealPeriodBlock[];
 }
 
@@ -47,6 +48,7 @@ export interface ScheduleMetrics {
 
 export interface ScheduleData {
   metrics: ScheduleMetrics;
+  generatedAt?: string | null;
   days: ScheduleDay[];
 }
 

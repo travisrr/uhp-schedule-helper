@@ -7,8 +7,8 @@ import { ScheduleWeekView } from "@/components/schedule/schedule-week-view";
 export default function SchedulePage() {
   return (
     <AppShell
-      title="Schedule Output"
-      description="Weekly roster with AM/PM shift blocks, role groupings, and labor analytics."
+      title="Shift Report"
+      description="Weekly roster with AM/PM shift blocks and role groupings, matching the Excel export layout."
     >
       <div className="space-y-6">
         <ScheduleMetricsRibbon />

@@ -10,7 +10,7 @@ import { DAYS, type DayKey } from "../utils";
 import {
   extractEmployeeName,
   extractTimeRange,
-  normalizeDayHeader,
+  parseDayHeader,
   parseNumber,
   rowIncludes,
   type RawSheet,
@@ -64,6 +64,15 @@ function parseShiftCell(text: string): ShiftAssignment | null {
     employee: employee || trimmed,
     timeRange: timeRange ?? "—",
   };
+}
+
+function parseGeneratedAt(rows: RawSheet): string | null {
+  for (const row of rows.slice(0, 6)) {
+    const joined = row.join(" ").trim();
+    const match = joined.match(/generated on:\s*(.+)$/i);
+    if (match) return match[1].trim();
+  }
+  return null;
 }
 
 function parseMetrics(rows: RawSheet): ScheduleMetrics {
@@ -132,6 +141,7 @@ function getRoleBlock(
 
 export function parseScheduleSheet(rows: RawSheet): ScheduleData {
   const metrics = parseMetrics(rows);
+  const generatedAt = parseGeneratedAt(rows);
   const days: ScheduleDay[] = DAYS.map(createEmptyDay);
 
   let currentDay: ScheduleDay | null = null;
@@ -142,9 +152,12 @@ export function parseScheduleSheet(rows: RawSheet): ScheduleData {
     if (!row || row.every((cell) => !cell.trim())) continue;
 
     const joined = row.join(" ").trim();
-    const dayKey = normalizeDayHeader(row[0] ?? joined);
-    if (dayKey) {
-      currentDay = days.find((day) => day.day === dayKey) ?? null;
+    const dayHeader = parseDayHeader(row[0] ?? joined);
+    if (dayHeader) {
+      currentDay = days.find((day) => day.day === dayHeader.day) ?? null;
+      if (currentDay && dayHeader.dateLabel) {
+        currentDay.dateLabel = dayHeader.dateLabel;
+      }
       currentRole = null;
       const period = detectMealPeriod(joined);
       if (period) currentPeriod = period;
@@ -178,6 +191,7 @@ export function parseScheduleSheet(rows: RawSheet): ScheduleData {
 
   return {
     metrics,
+    generatedAt,
     days: days.filter(
       (day) =>
         day.mealPeriods.some((period) =>
@@ -197,10 +211,14 @@ function buildFallbackSchedule(rows: RawSheet): ScheduleDay[] {
 
   for (const row of rows) {
     const firstCell = row[0]?.trim() ?? "";
-    const dayKey = normalizeDayHeader(firstCell);
-    if (dayKey) {
-      const idx = DAYS.indexOf(dayKey);
+    const dayHeader = parseDayHeader(firstCell);
+    if (dayHeader) {
+      const idx = DAYS.indexOf(dayHeader.day);
       if (idx >= 0) dayIndex = idx;
+      const day = days[dayIndex];
+      if (day && dayHeader.dateLabel) {
+        day.dateLabel = dayHeader.dateLabel;
+      }
       period = detectMealPeriod(row.join(" ")) ?? period;
       continue;
     }

@@ -1,60 +1,79 @@
 "use client";
 
-import { Separator } from "@/components/ui/separator";
 import { useAppData } from "@/context/data-context";
 import { DAY_LABELS, DAYS } from "@/lib/utils";
 import type { MealPeriodBlock } from "@/lib/types";
 
-function ShiftCard({
-  employee,
-  timeRange,
-}: {
-  employee: string;
-  timeRange: string;
-}) {
+function MealPeriodTable({ block }: { block: MealPeriodBlock }) {
+  const activeRoles = block.roles.filter((role) => role.shifts.length > 0);
+
   return (
-    <div className="rounded-md border border-zinc-200 bg-zinc-100/80 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/60">
-      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{employee}</p>
-      <p className="mt-0.5 text-xs tabular-nums text-emerald-400">{timeRange}</p>
-    </div>
+    <table className="w-full border-collapse text-sm">
+      <thead>
+        <tr>
+          <th
+            colSpan={4}
+            className="border border-zinc-300 bg-black px-3 py-1.5 text-center text-sm font-bold text-white dark:border-zinc-600"
+          >
+            {block.period}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {activeRoles.length === 0 ? (
+          <tr>
+            <td
+              colSpan={4}
+              className="border border-zinc-300 px-3 py-2 text-xs text-zinc-400 dark:border-zinc-600"
+            >
+              No shifts scheduled
+            </td>
+          </tr>
+        ) : (
+          activeRoles.map((roleBlock) => (
+            <RoleSection
+              key={`${block.period}-${roleBlock.role}`}
+              role={roleBlock.role}
+              shifts={roleBlock.shifts}
+            />
+          ))
+        )}
+      </tbody>
+    </table>
   );
 }
 
-function MealPeriodColumn({ block }: { block: MealPeriodBlock }) {
-  const hasShifts = block.roles.some((role) => role.shifts.length > 0);
-
+function RoleSection({
+  role,
+  shifts,
+}: {
+  role: string;
+  shifts: Array<{ employee: string; timeRange: string }>;
+}) {
   return (
-    <div className="min-w-0 flex-1 space-y-4">
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-          {block.period}
-        </span>
-        <Separator className="flex-1" />
-      </div>
-
-      {!hasShifts ? (
-        <p className="text-xs text-zinc-400 dark:text-zinc-600">No shifts scheduled</p>
-      ) : (
-        block.roles.map((roleBlock) =>
-          roleBlock.shifts.length > 0 ? (
-            <div key={`${block.period}-${roleBlock.role}`} className="space-y-2">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
-                {roleBlock.role}
-              </p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {roleBlock.shifts.map((shift, index) => (
-                  <ShiftCard
-                    key={`${shift.employee}-${shift.timeRange}-${index}`}
-                    employee={shift.employee}
-                    timeRange={shift.timeRange}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null,
-        )
-      )}
-    </div>
+    <>
+      <tr>
+        <td
+          colSpan={4}
+          className="border border-zinc-300 bg-zinc-600 px-3 py-1 text-center text-sm font-semibold text-white dark:border-zinc-600"
+        >
+          {role}
+        </td>
+      </tr>
+      {shifts.map((shift, index) => (
+        <tr key={`${shift.employee}-${shift.timeRange}-${index}`}>
+          <td
+            colSpan={3}
+            className="border border-zinc-300 px-3 py-1 text-zinc-900 dark:border-zinc-600 dark:text-zinc-100"
+          >
+            {shift.employee}
+          </td>
+          <td className="border border-zinc-300 px-3 py-1 text-right tabular-nums text-zinc-900 dark:border-zinc-600 dark:text-zinc-100">
+            {shift.timeRange}
+          </td>
+        </tr>
+      ))}
+    </>
   );
 }
 
@@ -86,7 +105,18 @@ export function ScheduleWeekView() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
+      <div className="space-y-1">
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+          Shift Report
+        </h2>
+        {schedule.generatedAt ? (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Generated on: {schedule.generatedAt}
+          </p>
+        ) : null}
+      </div>
+
       {orderedDays.map((day) => {
         if (!day) return null;
         const amBlock =
@@ -99,20 +129,20 @@ export function ScheduleWeekView() {
             period: "PM" as const,
             roles: [],
           };
+        const dateLabel = day.dateLabel ?? DAY_LABELS[day.day];
 
         return (
-          <section
-            key={day.day}
-            className="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
-          >
-            <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-              <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                {DAY_LABELS[day.day]}
-              </h3>
-            </div>
-            <div className="grid gap-6 p-4 lg:grid-cols-2">
-              <MealPeriodColumn block={amBlock} />
-              <MealPeriodColumn block={pmBlock} />
+          <section key={day.day} className="space-y-2">
+            <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+              {dateLabel}
+            </h3>
+            <div className="flex gap-4">
+              <div className="min-w-0 flex-1">
+                <MealPeriodTable block={amBlock} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <MealPeriodTable block={pmBlock} />
+              </div>
             </div>
           </section>
         );

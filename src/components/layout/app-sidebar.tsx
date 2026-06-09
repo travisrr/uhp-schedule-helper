@@ -22,7 +22,7 @@ const NAV_ITEMS = [
   },
   {
     href: "/schedule",
-    label: "Schedule Output",
+    label: "Shift Report",
     icon: LayoutGrid,
   },
   {

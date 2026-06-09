@@ -123,6 +123,24 @@ export function normalizeDayHeader(value: string): DayKey | null {
   return map[normalized] ?? null;
 }
 
+export function parseDayHeader(
+  value: string,
+): { day: DayKey; dateLabel: string } | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const weekdayMatch = trimmed.match(/^([A-Za-z]+day)\b/i);
+  if (weekdayMatch) {
+    const day = normalizeDayHeader(weekdayMatch[1]);
+    if (day) return { day, dateLabel: trimmed };
+  }
+
+  const day = normalizeDayHeader(trimmed);
+  if (day) return { day, dateLabel: trimmed };
+
+  return null;
+}
+
 export function normalizeAvailabilityStatus(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) return "OFF";
