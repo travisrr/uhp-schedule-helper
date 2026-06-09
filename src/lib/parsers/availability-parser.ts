@@ -117,3 +117,14 @@ export function parseAvailabilitySheet(rows: RawSheet): AvailabilityData {
 
   return { employees };
 }
+
+export function parseAvailabilityWorkbook(sheets: RawSheet[]): AvailabilityData {
+  const employees: EmployeeAvailability[] = [];
+
+  for (const sheet of sheets) {
+    const parsed = parseAvailabilitySheet(sheet);
+    employees.push(...parsed.employees);
+  }
+
+  return { employees };
+}

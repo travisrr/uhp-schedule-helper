@@ -8,23 +8,18 @@ function normalizeCell(value: unknown): string {
   return String(value).trim();
 }
 
-export async function readFileAsRawRows(file: File): Promise<RawSheet> {
-  const extension = file.name.split(".").pop()?.toLowerCase();
+function sheetToRawRows(sheet: XLSX.WorkSheet): RawSheet {
+  const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
+    header: 1,
+    defval: "",
+    raw: false,
+  });
+  return rows.map((row) =>
+    Array.isArray(row) ? row.map(normalizeCell) : [normalizeCell(row)],
+  );
+}
 
-  if (extension === "xlsx" || extension === "xls") {
-    const buffer = await file.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: "array" });
-    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json<unknown[]>(firstSheet, {
-      header: 1,
-      defval: "",
-      raw: false,
-    });
-    return rows.map((row) =>
-      Array.isArray(row) ? row.map(normalizeCell) : [normalizeCell(row)],
-    );
-  }
-
+async function readCsvAsRawRows(file: File): Promise<RawSheet> {
   const text = await file.text();
   const parsed = Papa.parse<string[]>(text, {
     skipEmptyLines: false,
@@ -35,6 +30,35 @@ export async function readFileAsRawRows(file: File): Promise<RawSheet> {
   }
 
   return parsed.data.map((row) => row.map(normalizeCell));
+}
+
+async function readExcelAsRawSheets(file: File): Promise<RawSheet[]> {
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: "array" });
+  return workbook.SheetNames.map((name) =>
+    sheetToRawRows(workbook.Sheets[name]),
+  );
+}
+
+export async function readFileAsRawRows(file: File): Promise<RawSheet> {
+  const extension = file.name.split(".").pop()?.toLowerCase();
+
+  if (extension === "xlsx" || extension === "xls") {
+    const sheets = await readExcelAsRawSheets(file);
+    return sheets[0] ?? [];
+  }
+
+  return readCsvAsRawRows(file);
+}
+
+export async function readFileAsRawSheets(file: File): Promise<RawSheet[]> {
+  const extension = file.name.split(".").pop()?.toLowerCase();
+
+  if (extension === "xlsx" || extension === "xls") {
+    return readExcelAsRawSheets(file);
+  }
+
+  return [await readCsvAsRawRows(file)];
 }
 
 export function findRowIndex(

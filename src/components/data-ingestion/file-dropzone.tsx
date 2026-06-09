@@ -12,7 +12,8 @@ interface FileDropzoneProps<T> {
   description: string;
   onSuccess: (fileName: string, data: T) => void;
   onError: (message: string) => void;
-  parse: (rows: string[][]) => T;
+  parse?: (rows: string[][]) => T;
+  readAndParse?: (file: File) => Promise<T>;
   lastUploaded?: string | null;
 }
 
@@ -22,6 +23,7 @@ export function FileDropzone<T>({
   onSuccess,
   onError,
   parse,
+  readAndParse,
   lastUploaded,
 }: FileDropzoneProps<T>) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,8 +34,9 @@ export function FileDropzone<T>({
     async (file: File) => {
       setIsProcessing(true);
       try {
-        const rows = await readFileAsRawRows(file);
-        const data = parse(rows);
+        const data = readAndParse
+          ? await readAndParse(file)
+          : parse!(await readFileAsRawRows(file));
         onSuccess(file.name, data);
       } catch (error) {
         onError(
@@ -43,7 +46,7 @@ export function FileDropzone<T>({
         setIsProcessing(false);
       }
     },
-    [onError, onSuccess, parse],
+    [onError, onSuccess, parse, readAndParse],
   );
 
   const handleFiles = useCallback(

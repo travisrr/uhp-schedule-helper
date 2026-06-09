@@ -65,8 +65,8 @@ export function AvailabilityMatrix() {
           </tr>
         </thead>
         <tbody>
-          {rows.map((employee) => (
-            <tr key={`${employee.employee}-${employee.role}`}>
+          {rows.map((employee, index) => (
+            <tr key={`${employee.employee}-${employee.role}-${index}`}>
               <td className={`${bodyClass} bg-white dark:bg-zinc-950`}>{employee.employee}</td>
               <td className={`${bodyClass} bg-white dark:bg-zinc-950`}>
                 {getEmployeeRole(employee) || "—"}
