@@ -3,6 +3,11 @@ import * as XLSX from "xlsx";
 
 export type RawSheet = string[][];
 
+export interface NamedSheet {
+  name: string;
+  rows: RawSheet;
+}
+
 function normalizeCell(value: unknown): string {
   if (value === null || value === undefined) return "";
   return String(value).trim();
@@ -32,12 +37,18 @@ async function readCsvAsRawRows(file: File): Promise<RawSheet> {
   return parsed.data.map((row) => row.map(normalizeCell));
 }
 
-async function readExcelAsRawSheets(file: File): Promise<RawSheet[]> {
+async function readExcelAsNamedSheets(file: File): Promise<NamedSheet[]> {
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: "array" });
-  return workbook.SheetNames.map((name) =>
-    sheetToRawRows(workbook.Sheets[name]),
-  );
+  return workbook.SheetNames.map((name) => ({
+    name,
+    rows: sheetToRawRows(workbook.Sheets[name]),
+  }));
+}
+
+async function readExcelAsRawSheets(file: File): Promise<RawSheet[]> {
+  const sheets = await readExcelAsNamedSheets(file);
+  return sheets.map((sheet) => sheet.rows);
 }
 
 export async function readFileAsRawRows(file: File): Promise<RawSheet> {
@@ -52,13 +63,19 @@ export async function readFileAsRawRows(file: File): Promise<RawSheet> {
 }
 
 export async function readFileAsRawSheets(file: File): Promise<RawSheet[]> {
+  const sheets = await readFileAsNamedSheets(file);
+  return sheets.map((sheet) => sheet.rows);
+}
+
+export async function readFileAsNamedSheets(file: File): Promise<NamedSheet[]> {
   const extension = file.name.split(".").pop()?.toLowerCase();
 
   if (extension === "xlsx" || extension === "xls") {
-    return readExcelAsRawSheets(file);
+    return readExcelAsNamedSheets(file);
   }
 
-  return [await readCsvAsRawRows(file)];
+  const baseName = file.name.replace(/\.[^.]+$/, "");
+  return [{ name: baseName, rows: await readCsvAsRawRows(file) }];
 }
 
 export function findRowIndex(

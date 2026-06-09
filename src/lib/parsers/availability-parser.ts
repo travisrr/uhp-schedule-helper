@@ -44,39 +44,71 @@ function isNonRoleColumn(header: string): boolean {
     lower.includes("shift") ||
     lower.includes("total") ||
     lower.includes("hours") ||
-    lower.includes("employee")
+    lower.includes("employee") ||
+    /^#+$/.test(lower) ||
+    /^\d+$/.test(lower)
   );
 }
 
-function findRoleColumnIndex(
+function isNumericRoleCode(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  return /^-?\d+(\.\d+)?$/.test(trimmed);
+}
+
+function normalizeRoleText(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed || isNumericRoleCode(trimmed)) return "";
+  return trimmed;
+}
+
+function findRoleColumnCandidates(
   headerRow: string[],
   employeeIndex: number,
-): number {
-  const explicit = findColumnIndex(
-    headerRow,
-    "role",
-    "position",
-    "job code",
-    "job title",
-    "job class",
-    "primary job",
-    "job",
-    "title",
-    "ratings",
-    "classification",
-  );
-  if (explicit >= 0) return explicit;
+): number[] {
+  const candidates: number[] = [];
+  const add = (index: number) => {
+    if (index >= 0 && !candidates.includes(index)) candidates.push(index);
+  };
 
-  if (employeeIndex < 0) return -1;
+  const priorityGroups = [
+    ["ratings"],
+    ["rating"],
+    ["role description", "job description"],
+    ["position"],
+    ["job title", "job class", "primary job"],
+    ["classification"],
+    ["description"],
+    ["role"],
+    ["job code"],
+    ["job"],
+  ];
 
-  for (let index = employeeIndex + 1; index < headerRow.length; index++) {
-    if (isDayColumn(headerRow, index)) break;
-    const header = headerRow[index]?.trim() ?? "";
-    if (header && isNonRoleColumn(header)) continue;
-    return index;
+  for (const labels of priorityGroups) {
+    add(findColumnIndex(headerRow, ...labels));
   }
 
-  return -1;
+  if (employeeIndex >= 0) {
+    for (let index = employeeIndex + 1; index < headerRow.length; index++) {
+      if (isDayColumn(headerRow, index)) break;
+      const header = headerRow[index]?.trim() ?? "";
+      if (header && isNonRoleColumn(header)) continue;
+      add(index);
+    }
+  }
+
+  return candidates;
+}
+
+function readRoleFromRow(
+  row: string[],
+  roleColumns: number[],
+): string {
+  for (const column of roleColumns) {
+    const role = normalizeRoleText(row[column] ?? "");
+    if (role) return role;
+  }
+  return "";
 }
 
 function isStaffingGuideBoundary(row: string[]): boolean {
@@ -92,7 +124,7 @@ function parseEmployeeRow(
   row: string[],
   dayColumns: Partial<Record<DayKey, number>>,
   employeeIndex: number,
-  roleIndex: number,
+  roleColumns: number[],
   shiftsIndex: number,
 ): EmployeeAvailability | null {
   const employee = row[employeeIndex]?.trim();
@@ -122,19 +154,30 @@ function parseEmployeeRow(
 
   return {
     employee,
-    role: roleIndex >= 0 ? row[roleIndex] ?? "" : "",
+    role: readRoleFromRow(row, roleColumns),
     days,
     totalShifts: parseNumber(totalRaw),
   };
 }
 
-export function parseAvailabilitySheet(rows: RawSheet): AvailabilityData {
+function normalizeSheetRole(sheetName: string): string {
+  const cleaned = sheetName
+    .replace(/availability|staffing|sheet|roster|schedule/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned || sheetName.trim();
+}
+
+export function parseAvailabilitySheet(
+  rows: RawSheet,
+  sheetName?: string,
+): AvailabilityData {
   const headerIndex = findHeaderRow(rows);
   const headerRow = rows[headerIndex] ?? [];
   const dayColumns = mapDayColumns(headerRow);
 
   const employeeIndex = findColumnIndex(headerRow, "employee");
-  const roleIndex = findRoleColumnIndex(
+  const roleColumns = findRoleColumnCandidates(
     headerRow,
     employeeIndex >= 0 ? employeeIndex : 0,
   );
@@ -146,6 +189,7 @@ export function parseAvailabilitySheet(rows: RawSheet): AvailabilityData {
   );
 
   const employees: EmployeeAvailability[] = [];
+  let lastRole = sheetName ? normalizeSheetRole(sheetName) : "";
 
   for (let i = headerIndex + 1; i < rows.length; i++) {
     const row = rows[i];
@@ -157,20 +201,40 @@ export function parseAvailabilitySheet(rows: RawSheet): AvailabilityData {
       row,
       dayColumns,
       employeeIndex >= 0 ? employeeIndex : 0,
-      roleIndex,
+      roleColumns,
       shiftsIndex,
     );
-    if (parsed) employees.push(parsed);
+    if (!parsed) continue;
+
+    const roleFromCell = parsed.role.trim();
+    if (roleFromCell) {
+      lastRole = roleFromCell;
+    }
+
+    const role =
+      roleFromCell ||
+      lastRole ||
+      (sheetName ? normalizeSheetRole(sheetName) : "");
+
+    employees.push({ ...parsed, role });
   }
 
   return { employees };
 }
 
-export function parseAvailabilityWorkbook(sheets: RawSheet[]): AvailabilityData {
+export function parseAvailabilityWorkbook(
+  sheets: Array<RawSheet | { name: string; rows: RawSheet }>,
+): AvailabilityData {
   const employees: EmployeeAvailability[] = [];
 
   for (const sheet of sheets) {
-    const parsed = parseAvailabilitySheet(sheet);
+    if (Array.isArray(sheet)) {
+      const parsed = parseAvailabilitySheet(sheet);
+      employees.push(...parsed.employees);
+      continue;
+    }
+
+    const parsed = parseAvailabilitySheet(sheet.rows, sheet.name);
     employees.push(...parsed.employees);
   }
 

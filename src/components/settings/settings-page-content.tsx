@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAppData } from "@/context/data-context";
-import { readFileAsRawSheets } from "@/lib/file-ingest";
+import { readFileAsNamedSheets } from "@/lib/file-ingest";
 import { parseAvailabilityWorkbook } from "@/lib/parsers/availability-parser";
 import { parseScheduleSheet } from "@/lib/parsers/schedule-parser";
 
@@ -42,7 +42,7 @@ export function SettingsPageContent() {
             label="Availability Ingestion"
             description="Employee, Role, Wed–Tue availability, and shift counts from every Excel tab. Staffing Guide rows are ignored."
             readAndParse={async (file) => {
-              const sheets = await readFileAsRawSheets(file);
+              const sheets = await readFileAsNamedSheets(file);
               return parseAvailabilityWorkbook(sheets);
             }}
             lastUploaded={availabilityFile}
