@@ -47,7 +47,7 @@ function parseEmployeeRow(
   row: string[],
   dayColumns: Partial<Record<DayKey, number>>,
   employeeIndex: number,
-  ratingsIndex: number,
+  roleIndex: number,
   shiftsIndex: number,
 ): EmployeeAvailability | null {
   const employee = row[employeeIndex]?.trim();
@@ -77,7 +77,7 @@ function parseEmployeeRow(
 
   return {
     employee,
-    ratings: ratingsIndex >= 0 ? row[ratingsIndex] ?? "" : "",
+    role: roleIndex >= 0 ? row[roleIndex] ?? "" : "",
     days,
     totalShifts: parseNumber(totalRaw),
   };
@@ -89,7 +89,7 @@ export function parseAvailabilitySheet(rows: RawSheet): AvailabilityData {
   const dayColumns = mapDayColumns(headerRow);
 
   const employeeIndex = findColumnIndex(headerRow, "employee");
-  const ratingsIndex = findColumnIndex(headerRow, "rating");
+  const roleIndex = findColumnIndex(headerRow, "role");
   const shiftsIndex = findColumnIndex(
     headerRow,
     "number of shifts",
@@ -109,7 +109,7 @@ export function parseAvailabilitySheet(rows: RawSheet): AvailabilityData {
       row,
       dayColumns,
       employeeIndex >= 0 ? employeeIndex : 0,
-      ratingsIndex,
+      roleIndex,
       shiftsIndex,
     );
     if (parsed) employees.push(parsed);

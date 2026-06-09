@@ -39,7 +39,7 @@ export function SettingsPageContent() {
         <div className="grid gap-6 lg:grid-cols-2">
           <FileDropzone
             label="Availability Ingestion"
-            description="Employee, Ratings, Wed–Tue availability, and shift counts. Staffing Guide rows are ignored."
+            description="Employee, Role, Wed–Tue availability, and shift counts. Staffing Guide rows are ignored."
             parse={parseAvailabilitySheet}
             lastUploaded={availabilityFile}
             onSuccess={(fileName, data) => {
@@ -78,9 +78,9 @@ export function SettingsPageContent() {
 
         <Separator />
 
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-zinc-200">Current dataset</p>
+            <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Current dataset</p>
             <p className="text-xs text-zinc-500">
               Availability:{" "}
               {availability

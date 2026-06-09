@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { AppDataProvider } from "@/context/data-context";
 import "./globals.css";
 
@@ -27,10 +28,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="h-full overflow-hidden bg-zinc-950 text-zinc-100">
-        <AppDataProvider>{children}</AppDataProvider>
+      <body className="h-full overflow-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+        <ThemeProvider>
+          <AppDataProvider>{children}</AppDataProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

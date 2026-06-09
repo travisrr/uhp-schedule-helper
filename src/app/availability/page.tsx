@@ -7,7 +7,7 @@ export default function AvailabilityPage() {
   return (
     <AppShell
       title="Employee Availability"
-      description="Roster matrix aligned to your source availability spreadsheet."
+      description="Staffing availability grid grouped by role, matching your source spreadsheet."
     >
       <AvailabilityMatrix />
     </AppShell>

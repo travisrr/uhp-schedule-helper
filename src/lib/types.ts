@@ -9,7 +9,7 @@ export type AvailabilityStatus =
 
 export interface EmployeeAvailability {
   employee: string;
-  ratings: string;
+  role: string;
   days: Record<DayKey, AvailabilityStatus>;
   totalShifts: number | null;
 }

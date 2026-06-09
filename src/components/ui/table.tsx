@@ -17,7 +17,7 @@ function TableHeader({
   ...props
 }: React.HTMLAttributes<HTMLTableSectionElement>) {
   return (
-    <thead className={cn("[&_tr]:border-b [&_tr]:border-zinc-800", className)} {...props} />
+    <thead className={cn("[&_tr]:border-b [&_tr]:border-zinc-200 dark:[&_tr]:border-zinc-800", className)} {...props} />
   );
 }
 
@@ -35,7 +35,7 @@ function TableRow({
   return (
     <tr
       className={cn(
-        "border-b border-zinc-800/80 transition-colors hover:bg-zinc-900/40",
+        "border-b border-zinc-200/80 transition-colors hover:bg-zinc-100/80 dark:border-zinc-800/80 dark:hover:bg-zinc-900/40",
         className,
       )}
       {...props}
@@ -64,7 +64,7 @@ function TableCell({
 }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={cn("px-3 py-2 align-middle text-sm text-zinc-300", className)}
+      className={cn("px-3 py-2 align-middle text-sm text-zinc-600 dark:text-zinc-300", className)}
       {...props}
     />
   );

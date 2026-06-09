@@ -13,8 +13,8 @@ function ShiftCard({
   timeRange: string;
 }) {
   return (
-    <div className="rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2">
-      <p className="text-sm font-medium text-zinc-100">{employee}</p>
+    <div className="rounded-md border border-zinc-200 bg-zinc-100/80 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/60">
+      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{employee}</p>
       <p className="mt-0.5 text-xs tabular-nums text-emerald-400">{timeRange}</p>
     </div>
   );
@@ -33,7 +33,7 @@ function MealPeriodColumn({ block }: { block: MealPeriodBlock }) {
       </div>
 
       {!hasShifts ? (
-        <p className="text-xs text-zinc-600">No shifts scheduled</p>
+        <p className="text-xs text-zinc-400 dark:text-zinc-600">No shifts scheduled</p>
       ) : (
         block.roles.map((roleBlock) =>
           roleBlock.shifts.length > 0 ? (
@@ -63,7 +63,7 @@ export function ScheduleWeekView() {
 
   if (!schedule) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-800 bg-zinc-950/50">
+      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-100/50 dark:border-zinc-800 dark:bg-zinc-950/50">
         <p className="text-sm text-zinc-500">
           Upload a weekly schedule report in Settings to populate shift assignments.
         </p>
@@ -77,7 +77,7 @@ export function ScheduleWeekView() {
 
   if (orderedDays.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-800 bg-zinc-950/50">
+      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-100/50 dark:border-zinc-800 dark:bg-zinc-950/50">
         <p className="text-sm text-zinc-500">
           Schedule file parsed, but no shift blocks were detected.
         </p>
@@ -103,10 +103,10 @@ export function ScheduleWeekView() {
         return (
           <section
             key={day.day}
-            className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950"
+            className="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
           >
-            <div className="border-b border-zinc-800 px-4 py-3">
-              <h3 className="text-sm font-medium text-zinc-100">
+            <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
+              <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                 {DAY_LABELS[day.day]}
               </h3>
             </div>

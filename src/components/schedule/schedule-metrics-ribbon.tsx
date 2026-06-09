@@ -17,10 +17,10 @@ function MetricCard({
   accent?: "emerald" | "blue";
 }) {
   return (
-    <div className="flex min-w-[180px] flex-1 items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3">
+    <div className="flex min-w-[180px] flex-1 items-center gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">
       <div
         className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900",
+          "flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900",
           accent === "emerald" && "text-emerald-400",
           accent === "blue" && "text-blue-400",
           !accent && "text-zinc-400",
@@ -32,7 +32,7 @@ function MetricCard({
         <p className="text-[11px] uppercase tracking-wide text-zinc-500">
           {label}
         </p>
-        <p className="text-lg font-semibold tabular-nums text-zinc-100">
+        <p className="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
           {value}
         </p>
       </div>
