@@ -85,7 +85,10 @@ export function computeEmployeeWeeklyStats(
     }
   }
 
-  return [...byKey.values()].sort((a, b) =>
-    a.employee.localeCompare(b.employee, undefined, { sensitivity: "base" }),
-  );
+  return [...byKey.values()].sort((a, b) => {
+    if (b.totalHours !== a.totalHours) return b.totalHours - a.totalHours;
+    return a.employee.localeCompare(b.employee, undefined, {
+      sensitivity: "base",
+    });
+  });
 }
