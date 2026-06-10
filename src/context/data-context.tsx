@@ -15,6 +15,7 @@ import type {
   PriorSchedule,
   ScheduleData,
 } from "@/lib/types";
+import { normalizeScheduleAssignments } from "@/lib/schedule-management-roles";
 import { getDefaultWeekStart, toISODateString } from "@/lib/week-utils";
 
 const STORAGE_KEY = "uhp-schedule-helper-data";
@@ -51,9 +52,13 @@ function loadStoredState(): AppDataState {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return createEmptyState();
     const parsed = JSON.parse(raw) as Partial<AppDataState>;
+    const schedule = parsed.schedule
+      ? normalizeScheduleAssignments(parsed.schedule)
+      : null;
+
     return {
       availability: parsed.availability ?? null,
-      schedule: parsed.schedule ?? null,
+      schedule,
       priorSchedule: parsed.priorSchedule ?? null,
       selectedWeekStart:
         parsed.selectedWeekStart ?? toISODateString(getDefaultWeekStart()),
@@ -82,7 +87,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setSchedule = useCallback((schedule: ScheduleData | null) => {
-    setState((prev) => ({ ...prev, schedule }));
+    setState((prev) => ({
+      ...prev,
+      schedule: schedule ? normalizeScheduleAssignments(schedule) : null,
+    }));
   }, []);
 
   const setPriorSchedule = useCallback((priorSchedule: PriorSchedule | null) => {

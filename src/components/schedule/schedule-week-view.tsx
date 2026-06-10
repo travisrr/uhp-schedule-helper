@@ -105,6 +105,8 @@ function SideCells({
   }
 
   const canEdit = editable && actions;
+  const hasEmployee = item.employee.trim().length > 0;
+  const displayTimeRange = hasEmployee ? item.timeRange : "";
 
   return (
     <>
@@ -119,21 +121,23 @@ function SideCells({
             : undefined
         }
       >
-        {item.employee || (
+        {hasEmployee ? (
+          item.employee
+        ) : (
           <span className="text-zinc-400 italic">Unassigned</span>
         )}
       </td>
       <td className={SPACER_CELL} />
       <td
-        className={cn(TIME_CELL, canEdit && INTERACTIVE_CELL)}
-        title={item.timeRange || undefined}
+        className={cn(TIME_CELL, canEdit && hasEmployee && INTERACTIVE_CELL)}
+        title={displayTimeRange || undefined}
         onContextMenu={
-          canEdit
+          canEdit && hasEmployee
             ? (event) => actions.openTimeMenu(event, item.ref, item.timeRange)
             : undefined
         }
       >
-        {item.timeRange}
+        {displayTimeRange}
       </td>
     </>
   );

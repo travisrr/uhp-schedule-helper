@@ -29,10 +29,10 @@ export function defaultTimeForPeriod(period: "AM" | "PM"): string {
   return period === "AM" ? DEFAULT_AM_TIME : DEFAULT_PM_TIME;
 }
 
-function createEmptyManagementShift(period: "AM" | "PM"): ShiftAssignment {
+function createEmptyManagementShift(): ShiftAssignment {
   return {
     employee: "",
-    timeRange: defaultTimeForPeriod(period),
+    timeRange: "",
   };
 }
 
@@ -52,7 +52,7 @@ export function ensureManagementSlot(
   if (managementIndex >= 0) {
     const managementRole = next[managementIndex];
     if (managementRole.shifts.length === 0) {
-      managementRole.shifts.push(createEmptyManagementShift(period));
+      managementRole.shifts.push(createEmptyManagementShift());
     }
     return next;
   }
@@ -61,7 +61,7 @@ export function ensureManagementSlot(
     ...next,
     {
       role: defaultManagementRoleForPeriod(period),
-      shifts: [createEmptyManagementShift(period)],
+      shifts: [createEmptyManagementShift()],
     },
   ];
 }
@@ -99,4 +99,37 @@ export function normalizeScheduleManagementSlots(
     ...schedule,
     days: schedule.days.map(ensureDayManagementSlots),
   };
+}
+
+function isAssignedShift(shift: ShiftAssignment): boolean {
+  return shift.employee.trim().length > 0;
+}
+
+export function normalizeScheduleAssignments(
+  schedule: ScheduleData,
+): ScheduleData {
+  const withoutGhostShifts: ScheduleData = {
+    ...schedule,
+    days: schedule.days.map((day) => ({
+      ...day,
+      mealPeriods: day.mealPeriods.map((periodBlock) => ({
+        ...periodBlock,
+        roles: periodBlock.roles.map((roleBlock) => ({
+          ...roleBlock,
+          shifts: roleBlock.shifts
+            .filter((shift) => {
+              if (isAssignedShift(shift)) return true;
+              return isFohManagementRole(roleBlock.role);
+            })
+            .map((shift) =>
+              isAssignedShift(shift)
+                ? shift
+                : { ...shift, timeRange: "" },
+            ),
+        })),
+      })),
+    })),
+  };
+
+  return normalizeScheduleManagementSlots(withoutGhostShifts);
 }

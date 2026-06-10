@@ -1,7 +1,7 @@
 import type { DayKey } from "@/lib/utils";
 import {
   isFohManagementRole,
-  normalizeScheduleManagementSlots,
+  normalizeScheduleAssignments,
 } from "@/lib/schedule-management-roles";
 import type { ScheduleData, ShiftAssignment } from "@/lib/types";
 
@@ -108,7 +108,7 @@ export function clearShiftEmployee(
   if (!shift) return schedule;
 
   if (isFohManagementRole(ref.role)) {
-    return normalizeScheduleManagementSlots({
+    return normalizeScheduleAssignments({
       ...schedule,
       days: schedule.days.map((day) => {
         if (day.day !== ref.day) return day;
@@ -127,7 +127,7 @@ export function clearShiftEmployee(
                   ...roleBlock,
                   shifts: roleBlock.shifts.map((entry, shiftIndex) =>
                     shiftIndex === ref.shiftIndex
-                      ? { ...entry, employee: "" }
+                      ? { ...entry, employee: "", timeRange: "" }
                       : entry,
                   ),
                 };
@@ -139,7 +139,7 @@ export function clearShiftEmployee(
     });
   }
 
-  return {
+  return normalizeScheduleAssignments({
     ...schedule,
     days: schedule.days.map((day) => {
       if (day.day !== ref.day) return day;
@@ -165,7 +165,7 @@ export function clearShiftEmployee(
         }),
       };
     }),
-  };
+  });
 }
 
 export function swapShiftEmployees(
@@ -180,7 +180,7 @@ export function swapShiftEmployees(
   const sourceEmployee = sourceShift.employee;
   const targetEmployee = targetShift.employee;
 
-  return {
+  return normalizeScheduleAssignments({
     ...schedule,
     days: schedule.days.map((day) => ({
       ...day,
@@ -207,7 +207,7 @@ export function swapShiftEmployees(
         })),
       })),
     })),
-  };
+  });
 }
 
 export function updateShiftTimeRange(
