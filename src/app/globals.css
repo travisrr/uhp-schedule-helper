@@ -49,3 +49,30 @@ body {
   background: rgb(16 185 129 / 0.25);
   color: rgb(236 253 245);
 }
+
+@media print {
+  @page {
+    margin: 0.4in;
+    size: landscape;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  #schedule-print-root {
+    overflow: visible !important;
+    border-radius: 0 !important;
+  }
+
+  #schedule-print-root table {
+    min-width: 0 !important;
+  }
+}

@@ -12,8 +12,10 @@ export default function SchedulePage() {
       description="Weekly roster with AM/PM shift blocks and role groupings, matching the Excel export layout."
     >
       <div className="space-y-6">
-        <ScheduleWeekSelector />
-        <ScheduleMetricsRibbon />
+        <div className="no-print space-y-6">
+          <ScheduleWeekSelector />
+          <ScheduleMetricsRibbon />
+        </div>
         <ScheduleWeekView />
       </div>
     </AppShell>

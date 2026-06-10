@@ -2,6 +2,7 @@
 
 import { useAppData } from "@/context/data-context";
 import { ScheduleEmployeeStatsPanel } from "@/components/schedule/schedule-employee-stats-panel";
+import { ScheduleExportActions } from "@/components/schedule/schedule-export-actions";
 import {
   ScheduleShiftActionProvider,
   useScheduleShiftActions,
@@ -226,6 +227,7 @@ function ScheduleWeekTable({
 
   const scheduleTable = (
     <div
+      id="schedule-print-root"
       className={cn(
         "overflow-x-auto rounded border border-black bg-white",
         showWeeklyStats ? "min-w-0 flex-1" : undefined,
@@ -279,16 +281,24 @@ function ScheduleWeekTable({
   );
 
   if (!showWeeklyStats) {
-    return scheduleTable;
+    return (
+      <div className="space-y-3">
+        <ScheduleExportActions weekStartDate={schedule.weekStartDate} />
+        {scheduleTable}
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
-      {scheduleTable}
-      <ScheduleEmployeeStatsPanel
-        className="xl:w-[300px] xl:shrink-0"
-        schedule={schedule}
-      />
+    <div className="space-y-3">
+      <ScheduleExportActions weekStartDate={schedule.weekStartDate} />
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
+        {scheduleTable}
+        <ScheduleEmployeeStatsPanel
+          className="no-print xl:w-[300px] xl:shrink-0"
+          schedule={schedule}
+        />
+      </div>
     </div>
   );
 }
