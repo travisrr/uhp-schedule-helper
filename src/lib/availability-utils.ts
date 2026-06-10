@@ -5,18 +5,59 @@ import type {
 } from "@/lib/types";
 import type { DayKey } from "@/lib/utils";
 
+const AM_ONLY_RE = /only\s*am|am\s*only/i;
+const PM_ONLY_RE = /only\s*pm|pm\s*only/i;
+
+export const AVAILABILITY_STATUS_OPTIONS = [
+  "OPEN",
+  "OFF",
+  "AM ONLY",
+  "PM ONLY",
+] as const satisfies readonly AvailabilityStatus[];
+
+export type AvailabilityStatusOption =
+  (typeof AVAILABILITY_STATUS_OPTIONS)[number];
+
+export function isAmOnlyStatus(status: AvailabilityStatus): boolean {
+  return AM_ONLY_RE.test(status.trim());
+}
+
+export function isPmOnlyStatus(status: AvailabilityStatus): boolean {
+  return PM_ONLY_RE.test(status.trim());
+}
+
+export function isAmOrPmOnlyStatus(status: AvailabilityStatus): boolean {
+  const trimmed = status.trim();
+  return isAmOnlyStatus(trimmed) || isPmOnlyStatus(trimmed);
+}
+
+export function normalizeAvailabilityStatus(value: string): AvailabilityStatus {
+  const trimmed = value.trim();
+  if (!trimmed) return "OFF";
+  const upper = trimmed.toUpperCase();
+  if (upper === "OPEN") return "OPEN";
+  if (upper === "OFF") return "OFF";
+  if (isAmOnlyStatus(trimmed)) return "AM ONLY";
+  if (isPmOnlyStatus(trimmed)) return "PM ONLY";
+  return trimmed;
+}
+
+export function formatAvailabilityLabel(status: AvailabilityStatus): string {
+  return normalizeAvailabilityStatus(status);
+}
+
 export function canWorkAM(status: AvailabilityStatus): boolean {
   const trimmed = status.trim();
   if (!trimmed || trimmed.toUpperCase() === "OFF") return false;
   if (trimmed.toUpperCase() === "OPEN") return true;
-  return /only\s*am/i.test(trimmed);
+  return isAmOnlyStatus(trimmed);
 }
 
 export function canWorkPM(status: AvailabilityStatus): boolean {
   const trimmed = status.trim();
   if (!trimmed || trimmed.toUpperCase() === "OFF") return false;
   if (trimmed.toUpperCase() === "OPEN") return true;
-  return /only\s*pm/i.test(trimmed);
+  return isPmOnlyStatus(trimmed);
 }
 
 export function canWorkPeriod(

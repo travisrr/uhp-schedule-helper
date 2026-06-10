@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { AvailabilityStatusOption } from "@/lib/availability-utils";
 import type {
   AppDataState,
   AvailabilityData,
@@ -17,6 +18,7 @@ import type {
   ScheduleData,
   StoredManifest,
 } from "@/lib/types";
+import type { DayKey } from "@/lib/utils";
 import { normalizeScheduleAssignments } from "@/lib/schedule-management-roles";
 import {
   createDefaultShiftHours,
@@ -48,6 +50,11 @@ interface AppDataContextValue extends AppDataState {
   setSelectedWeekStart: (weekStart: string | null) => void;
   setShiftHours: (shiftHours: ShiftHoursSettings) => void;
   removeAvailabilityEmployee: (index: number) => void;
+  updateAvailabilityStatus: (
+    employeeIndex: number,
+    day: DayKey,
+    status: AvailabilityStatusOption,
+  ) => void;
   clearAvailability: () => void;
   clearSchedule: () => void;
   clearPriorSchedule: () => void;
@@ -192,6 +199,34 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const updateAvailabilityStatus = useCallback(
+    (employeeIndex: number, day: DayKey, status: AvailabilityStatusOption) => {
+      setState((prev) => {
+        if (!prev.availability) return prev;
+        const employee = prev.availability.employees[employeeIndex];
+        if (!employee) return prev;
+
+        const employees = prev.availability.employees.map((entry, index) =>
+          index === employeeIndex
+            ? {
+                ...entry,
+                days: {
+                  ...entry.days,
+                  [day]: status,
+                },
+              }
+            : entry,
+        );
+
+        return {
+          ...prev,
+          availability: { employees },
+        };
+      });
+    },
+    [],
+  );
+
   const clearAvailability = useCallback(() => {
     setState((prev) => ({ ...prev, availability: null }));
   }, []);
@@ -224,6 +259,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setSelectedWeekStart,
       setShiftHours,
       removeAvailabilityEmployee,
+      updateAvailabilityStatus,
       clearAvailability,
       clearSchedule,
       clearPriorSchedule,
@@ -239,6 +275,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setSelectedWeekStart,
       setShiftHours,
       removeAvailabilityEmployee,
+      updateAvailabilityStatus,
       clearAvailability,
       clearSchedule,
       clearPriorSchedule,

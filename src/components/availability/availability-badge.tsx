@@ -1,24 +1,21 @@
+import {
+  formatAvailabilityLabel,
+  isAmOnlyStatus,
+  isPmOnlyStatus,
+  normalizeAvailabilityStatus,
+} from "@/lib/availability-utils";
 import type { AvailabilityStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function normalizeStatus(status: AvailabilityStatus) {
-  const trimmed = status.trim();
-  const upper = trimmed.toUpperCase();
-  if (!trimmed || upper === "OFF") return "off" as const;
-  if (upper === "OPEN") return "open" as const;
-  if (/only\s*am/i.test(trimmed)) return "am" as const;
-  if (/only\s*pm/i.test(trimmed)) return "pm" as const;
-  return "neutral" as const;
-}
+export { formatAvailabilityLabel };
 
-export function formatAvailabilityLabel(status: AvailabilityStatus): string {
-  const trimmed = status.trim();
-  if (!trimmed) return "OFF";
-  if (/only\s*am/i.test(trimmed)) return "Only AM";
-  if (/only\s*pm/i.test(trimmed)) return "Only PM";
-  if (trimmed.toUpperCase() === "OPEN") return "OPEN";
-  if (trimmed.toUpperCase() === "OFF") return "OFF";
-  return trimmed;
+function normalizeStatus(status: AvailabilityStatus) {
+  const canonical = normalizeAvailabilityStatus(status);
+  if (canonical === "OFF") return "off" as const;
+  if (canonical === "OPEN") return "open" as const;
+  if (isAmOnlyStatus(canonical)) return "am" as const;
+  if (isPmOnlyStatus(canonical)) return "pm" as const;
+  return "neutral" as const;
 }
 
 export function getAvailabilityCellClass(status: AvailabilityStatus): string {

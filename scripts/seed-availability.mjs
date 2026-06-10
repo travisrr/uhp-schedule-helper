@@ -25,6 +25,47 @@ function sheetToRawRows(sheet) {
   );
 }
 
+const IGNORED_AVAILABILITY_ROLE_PATTERNS = [
+  "Admin Management",
+  "BOH Manager Management",
+  "Company Training",
+  "Dishwashers BOH",
+  "Event Coordinator",
+  "Expeditor BOH",
+  "Expo FOH",
+  "Lead Cook",
+  "Line Cook",
+  "MIT Management",
+  "Owner Management",
+  "Prep Cook",
+  "Training",
+];
+
+function normalizeRoleForMatch(role) {
+  return role
+    .toLowerCase()
+    .replace(/\(hourly\)/gi, "")
+    .replace(/[-–—]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isIgnoredAvailabilityRole(role) {
+  const normalizedRole = normalizeRoleForMatch(role);
+
+  return IGNORED_AVAILABILITY_ROLE_PATTERNS.some((pattern) => {
+    const normalizedPattern = normalizeRoleForMatch(pattern);
+
+    if (normalizedPattern === "training") {
+      return normalizedRole === "training" || normalizedRole === "training foh";
+    }
+
+    if (normalizedRole === normalizedPattern) return true;
+    if (normalizedRole.startsWith(`${normalizedPattern} `)) return true;
+    return false;
+  });
+}
+
 const DAYS = ["Wed", "Thu", "Fri", "Sat", "Sun", "Mon", "Tue"];
 const dayMap = {
   wed: "Wed",
@@ -57,8 +98,8 @@ function normalizeAvailabilityStatus(value) {
   const upper = trimmed.toUpperCase();
   if (upper === "OPEN") return "OPEN";
   if (upper === "OFF") return "OFF";
-  if (/only\s*am/i.test(trimmed)) return "Only AM";
-  if (/only\s*pm/i.test(trimmed)) return "Only PM";
+  if (/only\s*am|am\s*only/i.test(trimmed)) return "AM ONLY";
+  if (/only\s*pm|pm\s*only/i.test(trimmed)) return "PM ONLY";
   return trimmed;
 }
 
@@ -82,6 +123,10 @@ function availabilityEmployeeKey(employee) {
 }
 
 function parseSheet(rows, sheetName) {
+  if (isIgnoredAvailabilityRole(normalizeSheetRole(sheetName))) {
+    return [];
+  }
+
   const headerIndex = rows.findIndex(
     (row) =>
       row.join(" ").toLowerCase().includes("employee") &&
@@ -140,6 +185,8 @@ function parseSheet(rows, sheetName) {
       shiftsIndex >= 0 ? row[shiftsIndex] ?? "" : row[row.length - 1] ?? "";
 
     const role = lastRole;
+    if (isIgnoredAvailabilityRole(role)) continue;
+
     employees.push({
       employee,
       role,
@@ -163,7 +210,11 @@ for (const employee of allEmployees) {
   merged.set(key, employee);
 }
 
-const availability = { employees: [...merged.values()] };
+const availability = {
+  employees: [...merged.values()].filter(
+    (employee) => !isIgnoredAvailabilityRole(employee.role),
+  ),
+};
 const now = new Date().toISOString();
 
 const appState = {

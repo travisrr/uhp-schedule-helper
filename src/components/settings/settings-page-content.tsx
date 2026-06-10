@@ -66,7 +66,7 @@ export function SettingsPageContent() {
         <div className="grid gap-6 lg:grid-cols-2">
           <FileDropzone
             label="Availability Ingestion"
-            description="Employee, Role, Wed–Tue availability, and shift counts from every Excel tab. Each role tab is kept as a separate roster row. Staffing Guide rows are ignored."
+            description="Employee, Role, Wed–Tue availability, and shift counts from every Excel tab. Each role tab is kept as a separate roster row. Admin, BOH kitchen, training, and other non-scheduling roles are excluded automatically. Staffing Guide rows are ignored."
             readAndParse={async (file) => {
               const sheets = await readFileAsNamedSheets(file);
               return parseAvailabilityWorkbook(sheets);

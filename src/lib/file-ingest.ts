@@ -149,16 +149,7 @@ export function parseDayHeader(
   return null;
 }
 
-export function normalizeAvailabilityStatus(value: string): string {
-  const trimmed = value.trim();
-  if (!trimmed) return "OFF";
-  const upper = trimmed.toUpperCase();
-  if (upper === "OPEN") return "OPEN";
-  if (upper === "OFF") return "OFF";
-  if (/only\s*am/i.test(trimmed)) return "Only AM";
-  if (/only\s*pm/i.test(trimmed)) return "Only PM";
-  return trimmed;
-}
+export { normalizeAvailabilityStatus } from "./availability-utils";
 
 export function extractTimeRange(text: string): string | null {
   const match = text.match(

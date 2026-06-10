@@ -3,8 +3,8 @@ import type { ShiftHoursSettings } from "./shift-hours";
 
 export type AvailabilityStatus =
   | "OPEN"
-  | "Only AM"
-  | "Only PM"
+  | "AM ONLY"
+  | "PM ONLY"
   | "OFF"
   | string;
 

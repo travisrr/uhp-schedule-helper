@@ -1,3 +1,4 @@
+import { isIgnoredAvailabilityRole } from "../availability-ignored-roles";
 import { availabilityEmployeeKey } from "../availability-keys";
 import type { AvailabilityData, EmployeeAvailability } from "../types";
 import { DAYS, type DayKey } from "../utils";
@@ -135,6 +136,8 @@ function parseEmployeeRow(
     employeeLower.includes("staffing guide") ||
     employeeLower === "only am" ||
     employeeLower === "only pm" ||
+    employeeLower === "am only" ||
+    employeeLower === "pm only" ||
     employeeLower === "meal period"
   ) {
     return null;
@@ -173,6 +176,10 @@ export function parseAvailabilitySheet(
   rows: RawSheet,
   sheetName?: string,
 ): AvailabilityData {
+  if (sheetName && isIgnoredAvailabilityRole(normalizeSheetRole(sheetName))) {
+    return { employees: [] };
+  }
+
   const headerIndex = findHeaderRow(rows);
   const headerRow = rows[headerIndex] ?? [];
   const dayColumns = mapDayColumns(headerRow);
@@ -217,6 +224,8 @@ export function parseAvailabilitySheet(
       lastRole ||
       (sheetName ? normalizeSheetRole(sheetName) : "");
 
+    if (isIgnoredAvailabilityRole(role)) continue;
+
     employees.push({ ...parsed, role });
   }
 
@@ -226,7 +235,7 @@ export function parseAvailabilitySheet(
 function availabilityStatusRank(status: string): number {
   const trimmed = status.trim();
   if (!trimmed || trimmed.toUpperCase() === "OFF") return 0;
-  if (/only\s*(am|pm)/i.test(trimmed)) return 1;
+  if (/only\s*(am|pm)|(am|pm)\s*only/i.test(trimmed)) return 1;
   if (trimmed.toUpperCase() === "OPEN") return 2;
   return 1;
 }
@@ -290,5 +299,9 @@ export function parseAvailabilityWorkbook(
     employees.push(...parsed.employees);
   }
 
-  return { employees: mergeAvailabilityEmployees(employees) };
+  return {
+    employees: mergeAvailabilityEmployees(employees).filter(
+      (employee) => !isIgnoredAvailabilityRole(employee.role),
+    ),
+  };
 }
