@@ -11,7 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAppData } from "@/context/data-context";
-import { computeAvailabilityDiff } from "@/lib/availability-diff";
+import {
+  applySelectiveAvailabilityUpload,
+  computeAvailabilityDiff,
+} from "@/lib/availability-diff";
 import { readFileAsNamedSheets } from "@/lib/file-ingest";
 import { parseAvailabilityWorkbook } from "@/lib/parsers/availability-parser";
 import { parseScheduleSheet } from "@/lib/parsers/schedule-parser";
@@ -139,9 +142,14 @@ export function SettingsPageContent() {
               availability,
               pendingAvailabilityUpload.data,
             )}
-            onAccept={() => {
+            onApply={(acceptedKeys) => {
               const { fileName, data } = pendingAvailabilityUpload;
-              applyAvailabilityUpload(fileName, data);
+              const merged = applySelectiveAvailabilityUpload(
+                availability,
+                data,
+                acceptedKeys,
+              );
+              applyAvailabilityUpload(fileName, merged);
               setPendingAvailabilityUpload(null);
             }}
             onReject={() => {

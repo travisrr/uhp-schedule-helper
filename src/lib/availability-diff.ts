@@ -13,6 +13,8 @@ export interface AvailabilityDiff {
   needsReview: boolean;
 }
 
+export type AvailabilityChangeKey = `add:${string}` | `role:${string}`;
+
 function normalizeName(name: string): string {
   return name.trim().toLowerCase();
 }
@@ -74,4 +76,62 @@ export function computeAvailabilityDiff(
     roleChanges,
     needsReview: added.length > 0 || roleChanges.length > 0,
   };
+}
+
+export function changeKeyForAdded(employee: EmployeeAvailability): AvailabilityChangeKey {
+  return `add:${normalizeName(employee.employee)}`;
+}
+
+export function changeKeyForRoleChange(
+  change: AvailabilityRoleChange,
+): AvailabilityChangeKey {
+  return `role:${normalizeName(change.employee)}`;
+}
+
+export function getAllChangeKeys(diff: AvailabilityDiff): AvailabilityChangeKey[] {
+  return [
+    ...diff.added.map(changeKeyForAdded),
+    ...diff.roleChanges.map(changeKeyForRoleChange),
+  ];
+}
+
+export function applySelectiveAvailabilityUpload(
+  current: AvailabilityData | null,
+  incoming: AvailabilityData,
+  acceptedKeys: ReadonlySet<AvailabilityChangeKey>,
+): AvailabilityData {
+  const diff = computeAvailabilityDiff(current, incoming);
+  const currentByName = indexByEmployee(current?.employees ?? []);
+  const deniedAdds = new Set(
+    diff.added
+      .filter((employee) => !acceptedKeys.has(changeKeyForAdded(employee)))
+      .map((employee) => normalizeName(employee.employee)),
+  );
+  const deniedRoleChanges = new Set(
+    diff.roleChanges
+      .filter((change) => !acceptedKeys.has(changeKeyForRoleChange(change)))
+      .map((change) => normalizeName(change.employee)),
+  );
+
+  const employees: EmployeeAvailability[] = [];
+
+  for (const employee of incoming.employees) {
+    const key = normalizeName(employee.employee);
+
+    if (deniedAdds.has(key)) {
+      continue;
+    }
+
+    if (deniedRoleChanges.has(key)) {
+      const existing = currentByName.get(key);
+      if (existing) {
+        employees.push(existing);
+      }
+      continue;
+    }
+
+    employees.push(employee);
+  }
+
+  return { employees };
 }
