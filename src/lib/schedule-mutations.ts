@@ -397,3 +397,10 @@ export function updateShiftTimeRange(
     }),
   };
 }
+
+export function getShiftTimeRange(
+  schedule: ScheduleData,
+  ref: ShiftRef,
+): string {
+  return getShiftAtRef(schedule, ref)?.timeRange ?? "";
+}

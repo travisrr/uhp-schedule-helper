@@ -26,6 +26,7 @@ import {
   assignShiftEmployee,
   clearShiftEmployee,
   formatShiftTimeRange,
+  getShiftTimeRange,
   isValidTimeToken,
   listAllEmployees,
   listShiftsInPeriod,
@@ -58,6 +59,7 @@ interface ScheduleShiftActionHandlers {
     ref: ShiftRef,
     timeRange: string,
   ) => void;
+  openTimeEditor: (ref: ShiftRef, timeRange: string) => void;
   openRoleMenu: (event: React.MouseEvent, ref: RoleRef) => void;
 }
 
@@ -157,6 +159,13 @@ export function ScheduleShiftActionProvider({
           y: event.clientY,
         });
       },
+      openTimeEditor(ref, timeRange) {
+        setTimeTarget({
+          kind: "time",
+          ref,
+          timeRange,
+        });
+      },
       openRoleMenu(event, ref) {
         event.preventDefault();
         event.stopPropagation();
@@ -251,17 +260,34 @@ export function ScheduleShiftActionProvider({
                   : "Assign an employee"}
               </button>
               {menu.employee.trim() ? (
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-                  onClick={() => {
-                    setRemoveTarget(menu);
-                    setMenu(null);
-                  }}
-                >
-                  <UserMinus className="size-4 shrink-0" />
-                  Remove from shift
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-900"
+                    onClick={() => {
+                      setTimeTarget({
+                        kind: "time",
+                        ref: menu.ref,
+                        timeRange: getShiftTimeRange(schedule, menu.ref),
+                      });
+                      setMenu(null);
+                    }}
+                  >
+                    <Clock3 className="size-4 shrink-0 text-zinc-500" />
+                    Adjust shift times
+                  </button>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+                    onClick={() => {
+                      setRemoveTarget(menu);
+                      setMenu(null);
+                    }}
+                  >
+                    <UserMinus className="size-4 shrink-0" />
+                    Remove from shift
+                  </button>
+                </>
               ) : null}
             </>
           ) : (
