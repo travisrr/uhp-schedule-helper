@@ -1,8 +1,9 @@
 "use client";
 
-import type { ComponentType } from "react";
-import { DollarSign, Clock, TrendingUp, Percent } from "lucide-react";
+import type { ComponentType, ReactNode } from "react";
+import { CalendarDays, Clock } from "lucide-react";
 import { useAppData } from "@/context/data-context";
+import { computeScheduleRibbonMetrics } from "@/lib/schedule-ribbon-metrics";
 import { cn } from "@/lib/utils";
 
 function MetricCard({
@@ -12,7 +13,7 @@ function MetricCard({
   accent,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   icon: ComponentType<{ className?: string }>;
   accent?: "emerald" | "blue";
 }) {
@@ -32,21 +33,21 @@ function MetricCard({
         <p className="text-[11px] uppercase tracking-wide text-zinc-500">
           {label}
         </p>
-        <p className="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
+        <div className="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
           {value}
-        </p>
+        </div>
       </div>
     </div>
   );
 }
 
-function formatCurrency(value: number | null): string {
-  if (value === null) return "—";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
+function BlankMetricCard() {
+  return (
+    <div
+      aria-hidden
+      className="min-w-[180px] flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950"
+    />
+  );
 }
 
 function formatHours(value: number | null): string {
@@ -54,39 +55,60 @@ function formatHours(value: number | null): string {
   return `${value.toFixed(1)} hrs`;
 }
 
-function formatPercent(value: number | null): string {
-  if (value === null) return "—";
-  return `${value.toFixed(1)}%`;
+function ShiftsValue({
+  assigned,
+  available,
+}: {
+  assigned: number | null;
+  available: number | null;
+}) {
+  if (assigned === null || available === null) {
+    return "—";
+  }
+
+  return (
+    <div className="flex items-end gap-5">
+      <div>
+        <p className="text-lg font-semibold leading-none">{available}</p>
+        <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+          Available
+        </p>
+      </div>
+      <div>
+        <p className="text-lg font-semibold leading-none">{assigned}</p>
+        <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+          Assigned
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export function ScheduleMetricsRibbon() {
   const { schedule } = useAppData();
-  const metrics = schedule?.metrics;
+  const metrics = schedule ? computeScheduleRibbonMetrics(schedule) : null;
 
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
       <MetricCard
-        label="Total Hours"
+        label="Total # Shifts"
+        value={
+          <ShiftsValue
+            assigned={metrics?.assignedShifts ?? null}
+            available={metrics?.totalShiftSlots ?? null}
+          />
+        }
+        icon={CalendarDays}
+        accent="blue"
+      />
+      <MetricCard
+        label="Total # of Hours"
         value={formatHours(metrics?.totalHours ?? null)}
         icon={Clock}
         accent="emerald"
       />
-      <MetricCard
-        label="Total Pay"
-        value={formatCurrency(metrics?.totalPay ?? null)}
-        icon={DollarSign}
-        accent="blue"
-      />
-      <MetricCard
-        label="Forecasted Sales"
-        value={formatCurrency(metrics?.forecastedSales ?? null)}
-        icon={TrendingUp}
-      />
-      <MetricCard
-        label="Actual Labor Cost %"
-        value={formatPercent(metrics?.actualLaborCostPercent ?? null)}
-        icon={Percent}
-      />
+      <BlankMetricCard />
+      <BlankMetricCard />
     </div>
   );
 }
