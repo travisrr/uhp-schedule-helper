@@ -187,34 +187,44 @@ function DaySection({
   );
 }
 
+const SCHEDULE_COLGROUP = (
+  <colgroup>
+    <col style={{ width: "18%" }} />
+    <col style={{ width: "14%" }} />
+    <col style={{ width: "8%" }} />
+    <col style={{ width: "16%" }} />
+    <col style={{ width: "2%" }} />
+    <col style={{ width: "18%" }} />
+    <col style={{ width: "14%" }} />
+    <col style={{ width: "8%" }} />
+    <col style={{ width: "16%" }} />
+  </colgroup>
+);
+
 function ScheduleWeekTable({
   schedule,
   title,
   editable,
+  showWeeklyStats,
 }: {
   schedule: ScheduleData;
   title: string;
   editable: boolean;
+  showWeeklyStats: boolean;
 }) {
   const orderedDays = DAYS.map((dayKey) =>
     schedule.days.find((day) => day.day === dayKey),
   ).filter(Boolean);
 
-  return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-      <div className="min-w-0 shrink-0 overflow-x-auto rounded border border-black bg-white lg:max-w-[62%]">
-        <table className="w-full min-w-[640px] table-fixed border-collapse text-sm">
-          <colgroup>
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "10%" }} />
-            <col style={{ width: "6%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "2%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "10%" }} />
-            <col style={{ width: "6%" }} />
-            <col style={{ width: "14%" }} />
-          </colgroup>
+  const scheduleTable = (
+    <div
+      className={cn(
+        "overflow-x-auto rounded border border-black bg-white",
+        showWeeklyStats ? "min-w-0 flex-1" : undefined,
+      )}
+    >
+      <table className="w-full min-w-[1000px] table-fixed border-collapse text-sm">
+        {SCHEDULE_COLGROUP}
         <tbody>
           <tr>
             <td className={TITLE} colSpan={9}>
@@ -256,10 +266,19 @@ function ScheduleWeekTable({
             );
           })}
         </tbody>
-        </table>
-      </div>
+      </table>
+    </div>
+  );
+
+  if (!showWeeklyStats) {
+    return scheduleTable;
+  }
+
+  return (
+    <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
+      {scheduleTable}
       <ScheduleEmployeeStatsPanel
-        className="lg:min-w-[280px] lg:flex-1"
+        className="xl:w-[300px] xl:shrink-0"
         schedule={schedule}
       />
     </div>
@@ -271,6 +290,8 @@ interface ScheduleWeekViewProps {
   title?: string;
   emptyMessage?: string;
   editable?: boolean;
+  /** Weekly totals sidebar; off for read-only previews like Prior Schedule. */
+  showWeeklyStats?: boolean;
 }
 
 export function ScheduleWeekView({
@@ -278,6 +299,7 @@ export function ScheduleWeekView({
   title = "Shift Report",
   emptyMessage = "Select a week above and generate a schedule from availability, or upload a weekly schedule report in Settings.",
   editable: editableProp,
+  showWeeklyStats = true,
 }: ScheduleWeekViewProps = {}) {
   const { schedule: contextSchedule, setSchedule } = useAppData();
   const schedule = scheduleProp ?? contextSchedule;
@@ -306,7 +328,14 @@ export function ScheduleWeekView({
   }
 
   if (!editable) {
-    return <ScheduleWeekTable schedule={schedule} title={title} editable={false} />;
+    return (
+      <ScheduleWeekTable
+        schedule={schedule}
+        title={title}
+        editable={false}
+        showWeeklyStats={showWeeklyStats}
+      />
+    );
   }
 
   return (
@@ -314,7 +343,12 @@ export function ScheduleWeekView({
       schedule={schedule}
       onScheduleChange={setSchedule}
     >
-      <ScheduleWeekTable schedule={schedule} title={title} editable />
+      <ScheduleWeekTable
+        schedule={schedule}
+        title={title}
+        editable
+        showWeeklyStats={showWeeklyStats}
+      />
     </ScheduleShiftActionProvider>
   );
 }

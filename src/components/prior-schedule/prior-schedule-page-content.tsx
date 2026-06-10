@@ -142,6 +142,8 @@ export function PriorSchedulePageContent() {
                 schedule={priorSchedule.schedule}
                 title="Prior Schedule Baseline"
                 emptyMessage="No prior schedule loaded."
+                editable={false}
+                showWeeklyStats={false}
               />
             </div>
           </>
