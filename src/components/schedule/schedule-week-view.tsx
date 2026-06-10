@@ -7,30 +7,25 @@ import type { MealPeriodBlock, ScheduleData } from "@/lib/types";
 
 type RowItem =
   | { kind: "role"; role: string }
-  | { kind: "shift"; employee: string; timeRange: string; role: string };
+  | { kind: "shift"; employee: string; timeRange: string };
 
 interface CombinedRow {
   am: RowItem | null;
   pm: RowItem | null;
 }
 
-const CELL =
-  "border border-[#bfbfbf] bg-white align-middle text-[13px] leading-normal text-black";
+const BORDER = "border border-black";
+const CELL = `${BORDER} bg-white align-middle text-[13px] leading-snug text-black`;
 const GAP = "border-0 bg-white p-0";
-const PERIOD = `${CELL} bg-black px-2 py-1 text-center text-sm font-bold text-white`;
-const ROLE_HEADER = `${CELL} bg-[#808080] px-2 py-1 text-center text-sm font-semibold text-white`;
-const DATE = `${CELL} px-3 pt-4 text-sm font-bold`;
-const TITLE = `${CELL} border-b-0 px-3 py-1 text-base font-bold`;
-const GENERATED = `${CELL} border-t-0 px-3 py-1 text-[13px] font-normal`;
-const NAME_CELL = `${CELL} max-w-0 overflow-hidden text-ellipsis whitespace-nowrap px-3 py-1.5`;
-const ROLE_CELL = `${CELL} max-w-0 overflow-hidden text-ellipsis whitespace-nowrap px-2 py-1.5 text-center text-[12px] text-[#333333]`;
-const SPACER_CELL = `${CELL} w-3 px-0 py-1.5`;
-const TIME_CELL = `${CELL} whitespace-nowrap px-2 py-1.5 text-right text-[12px] tabular-nums`;
-const EMPTY_SIDE_CELL = `${CELL} px-3 py-1.5`;
-
-function formatRoleLabel(role: string): string {
-  return role.replace(/\s*\(from schedule\)/gi, "").trim();
-}
+const PERIOD = `${BORDER} bg-black px-2 py-1 text-center text-sm font-bold text-white`;
+const ROLE_HEADER = `${BORDER} bg-[#808080] px-2 py-1 text-center text-sm font-semibold text-white`;
+const DATE = `${BORDER} px-3 pt-4 text-sm font-bold`;
+const TITLE = `${BORDER} border-b-0 px-3 py-1 text-base font-bold`;
+const GENERATED = `${BORDER} border-t-0 px-3 py-1 text-[13px] font-normal`;
+const NAME_CELL = `${CELL} max-w-0 overflow-hidden text-ellipsis whitespace-nowrap px-3 py-1 text-left`;
+const SPACER_CELL = `${CELL} px-0 py-1`;
+const TIME_CELL = `${CELL} whitespace-nowrap px-2 py-1 text-right text-[12px] tabular-nums`;
+const EMPTY_SIDE_CELL = `${CELL} px-2 py-1`;
 
 function flattenMealPeriod(block: MealPeriodBlock): RowItem[] {
   const items: RowItem[] = [];
@@ -43,7 +38,6 @@ function flattenMealPeriod(block: MealPeriodBlock): RowItem[] {
         kind: "shift",
         employee: shift.employee,
         timeRange: shift.timeRange,
-        role: roleBlock.role,
       });
     }
   }
@@ -71,8 +65,7 @@ function SideCells({ item }: { item: RowItem | null }) {
   if (!item) {
     return (
       <>
-        <td className={EMPTY_SIDE_CELL} />
-        <td className={EMPTY_SIDE_CELL} />
+        <td className={EMPTY_SIDE_CELL} colSpan={2} />
         <td className={SPACER_CELL} />
         <td className={EMPTY_SIDE_CELL} />
       </>
@@ -82,20 +75,15 @@ function SideCells({ item }: { item: RowItem | null }) {
   if (item.kind === "role") {
     return (
       <td className={ROLE_HEADER} colSpan={4} title={item.role}>
-        {formatRoleLabel(item.role)}
+        {item.role}
       </td>
     );
   }
 
-  const roleLabel = formatRoleLabel(item.role);
-
   return (
     <>
-      <td className={NAME_CELL} title={item.employee}>
+      <td className={NAME_CELL} colSpan={2} title={item.employee}>
         {item.employee}
-      </td>
-      <td className={ROLE_CELL} title={roleLabel}>
-        {roleLabel}
       </td>
       <td className={SPACER_CELL} />
       <td className={TIME_CELL}>{item.timeRange}</td>
@@ -188,18 +176,18 @@ export function ScheduleWeekView({
   }
 
   return (
-    <div className="overflow-x-auto rounded border border-[#d4d4d4] bg-white">
-      <table className="w-full min-w-[1180px] table-fixed border-collapse text-sm">
+    <div className="overflow-x-auto rounded border border-black bg-white">
+      <table className="w-full min-w-[1000px] table-fixed border-collapse text-sm">
         <colgroup>
-          <col style={{ width: "13%" }} />
-          <col style={{ width: "11%" }} />
+          <col style={{ width: "18%" }} />
+          <col style={{ width: "14%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "16%" }} />
           <col style={{ width: "2%" }} />
-          <col style={{ width: "12%" }} />
-          <col style={{ width: "2%" }} />
-          <col style={{ width: "13%" }} />
-          <col style={{ width: "11%" }} />
-          <col style={{ width: "2%" }} />
-          <col style={{ width: "12%" }} />
+          <col style={{ width: "18%" }} />
+          <col style={{ width: "14%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "16%" }} />
         </colgroup>
         <tbody>
           <tr>
