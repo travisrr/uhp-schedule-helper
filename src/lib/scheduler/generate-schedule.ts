@@ -152,25 +152,26 @@ export function generateScheduleFromAvailability(
       const status = employee.days[dayKey];
       const employeeKey = normalizeEmployeeName(employee.employee);
       const priorDay = priorLookup?.get(employeeKey)?.get(dayKey);
+      const isNewEmployee = priorLookup !== null && !priorLookup.has(employeeKey);
 
       if (canWorkAM(status)) {
         const priorAM = priorDay?.get("AM");
-        const role = priorAM?.role ?? getRoleName(employee.role);
-        const timeRange = priorAM?.timeRange ?? DEFAULT_AM_TIME;
-        addShiftToRoleMap(amByRole, role, {
-          employee: employee.employee,
-          timeRange,
-        });
+        if (priorAM || isNewEmployee || priorLookup === null) {
+          addShiftToRoleMap(amByRole, priorAM?.role ?? getRoleName(employee.role), {
+            employee: employee.employee,
+            timeRange: priorAM?.timeRange ?? DEFAULT_AM_TIME,
+          });
+        }
       }
 
       if (canWorkPM(status)) {
         const priorPM = priorDay?.get("PM");
-        const role = priorPM?.role ?? getRoleName(employee.role);
-        const timeRange = priorPM?.timeRange ?? DEFAULT_PM_TIME;
-        addShiftToRoleMap(pmByRole, role, {
-          employee: employee.employee,
-          timeRange,
-        });
+        if (priorPM || isNewEmployee || priorLookup === null) {
+          addShiftToRoleMap(pmByRole, priorPM?.role ?? getRoleName(employee.role), {
+            employee: employee.employee,
+            timeRange: priorPM?.timeRange ?? DEFAULT_PM_TIME,
+          });
+        }
       }
     }
 
