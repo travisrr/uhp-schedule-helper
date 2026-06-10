@@ -178,7 +178,9 @@ export function ScheduleShiftActionProvider({
                 }}
               >
                 <ArrowLeftRight className="size-4 shrink-0 text-zinc-500" />
-                Swap with another employee
+                {menu.employee.trim()
+                  ? "Swap with another employee"
+                  : "Assign an employee"}
               </button>
               {menu.employee.trim() ? (
                 <button
