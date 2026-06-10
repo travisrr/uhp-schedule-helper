@@ -274,8 +274,8 @@ function RemoveEmployeeDialog({
           <div className="space-y-1">
             <DialogTitle>Remove from shift</DialogTitle>
             <DialogDescription>
-              Remove {employeeName || "this employee"} from this shift? The time
-              slot will stay open for reassignment.
+              Remove {employeeName || "this employee"} from this shift? The
+              shift slot will be removed from the schedule.
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -337,13 +337,8 @@ function SwapEmployeeDialog({
                   className="flex w-full items-center justify-between gap-3 rounded-md border border-zinc-200 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
                   onClick={() => onSelect(candidate)}
                 >
-                  <span
-                    className={cn(
-                      "font-medium text-zinc-900 dark:text-zinc-100",
-                      !candidate.employee.trim() && "italic text-zinc-400",
-                    )}
-                  >
-                    {candidate.employee.trim() || "Unassigned"}
+                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                    {candidate.employee.trim() || "—"}
                   </span>
                   <span className="text-xs text-zinc-500">
                     {candidate.role} · {candidate.timeRange}

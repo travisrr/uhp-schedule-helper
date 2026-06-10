@@ -120,10 +120,8 @@ export function clearShiftEmployee(
 
               return {
                 ...roleBlock,
-                shifts: roleBlock.shifts.map((entry, shiftIndex) =>
-                  shiftIndex === ref.shiftIndex
-                    ? { ...entry, employee: "" }
-                    : entry,
+                shifts: roleBlock.shifts.filter(
+                  (_, shiftIndex) => shiftIndex !== ref.shiftIndex,
                 ),
               };
             }),

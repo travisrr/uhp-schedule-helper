@@ -103,19 +103,13 @@ function SideCells({
   }
 
   const canEdit = editable && actions;
-  const isVacant = !item.employee.trim();
-  const displayName = isVacant ? "Unassigned" : item.employee;
 
   return (
     <>
       <td
-        className={cn(
-          NAME_CELL,
-          canEdit && INTERACTIVE_CELL,
-          isVacant && "text-zinc-400 italic",
-        )}
+        className={cn(NAME_CELL, canEdit && INTERACTIVE_CELL)}
         colSpan={2}
-        title={displayName}
+        title={item.employee || undefined}
         onContextMenu={
           canEdit
             ? (event) =>
@@ -123,12 +117,12 @@ function SideCells({
             : undefined
         }
       >
-        {displayName}
+        {item.employee}
       </td>
       <td className={SPACER_CELL} />
       <td
         className={cn(TIME_CELL, canEdit && INTERACTIVE_CELL)}
-        title={item.timeRange}
+        title={item.timeRange || undefined}
         onContextMenu={
           canEdit
             ? (event) => actions.openTimeMenu(event, item.ref, item.timeRange)
