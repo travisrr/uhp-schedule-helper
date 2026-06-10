@@ -9,6 +9,7 @@ import type {
   ShiftAssignment,
 } from "../types";
 import { DAYS, type DayKey } from "../utils";
+import { ensureManagementSlot } from "../schedule-management-roles";
 import {
   buildDayDateLabels,
   formatGeneratedTimestamp,
@@ -181,8 +182,8 @@ function generateFromAvailabilityOnly(
 
     const amBlock = getMealBlock(day, "AM");
     const pmBlock = getMealBlock(day, "PM");
-    amBlock.roles = buildRoleBlocks(amByRole);
-    pmBlock.roles = buildRoleBlocks(pmByRole);
+    amBlock.roles = ensureManagementSlot(buildRoleBlocks(amByRole), "AM");
+    pmBlock.roles = ensureManagementSlot(buildRoleBlocks(pmByRole), "PM");
 
     return day;
   });
@@ -234,8 +235,8 @@ function generateFromPriorSchedule(
 
     const amBlock = getMealBlock(day, "AM");
     const pmBlock = getMealBlock(day, "PM");
-    amBlock.roles = buildRoleBlocks(amByRole);
-    pmBlock.roles = buildRoleBlocks(pmByRole);
+    amBlock.roles = ensureManagementSlot(buildRoleBlocks(amByRole), "AM");
+    pmBlock.roles = ensureManagementSlot(buildRoleBlocks(pmByRole), "PM");
 
     return day;
   });

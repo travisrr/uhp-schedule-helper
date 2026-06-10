@@ -275,7 +275,7 @@ function RemoveEmployeeDialog({
             <DialogTitle>Remove from shift</DialogTitle>
             <DialogDescription>
               Remove {employeeName || "this employee"} from this shift? The
-              shift slot will be removed from the schedule.
+              shift slot will stay open so you can assign someone else.
             </DialogDescription>
           </div>
         </DialogHeader>

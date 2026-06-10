@@ -6,6 +6,7 @@ import type {
   ScheduleMetrics,
   ShiftAssignment,
 } from "../types";
+import { ensureDayManagementSlots } from "../schedule-management-roles";
 import { DAYS, type DayKey } from "../utils";
 import {
   extractEmployeeName,
@@ -369,7 +370,7 @@ export function parseScheduleSheet(rows: RawSheet): ScheduleData {
   return {
     metrics,
     generatedAt,
-    days,
+    days: days.map(ensureDayManagementSlots),
   };
 }
 

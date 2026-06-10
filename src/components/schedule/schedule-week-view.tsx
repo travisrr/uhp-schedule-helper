@@ -7,6 +7,7 @@ import {
   useScheduleShiftActions,
 } from "@/components/schedule/schedule-shift-actions";
 import type { ShiftRef } from "@/lib/schedule-mutations";
+import { ensureMealPeriodManagementSlot } from "@/lib/schedule-management-roles";
 import { cn, DAY_LABELS, DAYS, type DayKey } from "@/lib/utils";
 import type { MealPeriodBlock, ScheduleData } from "@/lib/types";
 
@@ -35,9 +36,10 @@ const INTERACTIVE_CELL =
   "cursor-context-menu hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-zinc-400";
 
 function flattenMealPeriod(day: DayKey, block: MealPeriodBlock): RowItem[] {
+  const normalizedBlock = ensureMealPeriodManagementSlot(block);
   const items: RowItem[] = [];
 
-  for (const roleBlock of block.roles) {
+  for (const roleBlock of normalizedBlock.roles) {
     if (roleBlock.shifts.length === 0) continue;
     items.push({ kind: "role", role: roleBlock.role });
     roleBlock.shifts.forEach((shift, shiftIndex) => {
@@ -47,7 +49,7 @@ function flattenMealPeriod(day: DayKey, block: MealPeriodBlock): RowItem[] {
         timeRange: shift.timeRange,
         ref: {
           day,
-          period: block.period,
+          period: normalizedBlock.period,
           role: roleBlock.role,
           shiftIndex,
         },
@@ -117,7 +119,9 @@ function SideCells({
             : undefined
         }
       >
-        {item.employee}
+        {item.employee || (
+          <span className="text-zinc-400 italic">Unassigned</span>
+        )}
       </td>
       <td className={SPACER_CELL} />
       <td

@@ -1,4 +1,8 @@
 import type { DayKey } from "@/lib/utils";
+import {
+  isFohManagementRole,
+  normalizeScheduleManagementSlots,
+} from "@/lib/schedule-management-roles";
 import type { ScheduleData, ShiftAssignment } from "@/lib/types";
 
 export interface ShiftRef {
@@ -102,6 +106,38 @@ export function clearShiftEmployee(
 ): ScheduleData {
   const shift = getShiftAtRef(schedule, ref);
   if (!shift) return schedule;
+
+  if (isFohManagementRole(ref.role)) {
+    return normalizeScheduleManagementSlots({
+      ...schedule,
+      days: schedule.days.map((day) => {
+        if (day.day !== ref.day) return day;
+
+        return {
+          ...day,
+          mealPeriods: day.mealPeriods.map((periodBlock) => {
+            if (periodBlock.period !== ref.period) return periodBlock;
+
+            return {
+              ...periodBlock,
+              roles: periodBlock.roles.map((roleBlock) => {
+                if (roleBlock.role !== ref.role) return roleBlock;
+
+                return {
+                  ...roleBlock,
+                  shifts: roleBlock.shifts.map((entry, shiftIndex) =>
+                    shiftIndex === ref.shiftIndex
+                      ? { ...entry, employee: "" }
+                      : entry,
+                  ),
+                };
+              }),
+            };
+          }),
+        };
+      }),
+    });
+  }
 
   return {
     ...schedule,
