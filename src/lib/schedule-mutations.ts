@@ -4,11 +4,19 @@ import {
   isFohManagementRole,
   normalizeScheduleAssignments,
 } from "@/lib/schedule-management-roles";
+import type { ShiftHoursSettings } from "@/lib/shift-hours";
+import {
+  formatShiftTimeRange,
+  isValidTimeToken,
+  parseShiftTimeRange,
+} from "@/lib/time-format";
 import type {
   AvailabilityData,
   ScheduleData,
   ShiftAssignment,
 } from "@/lib/types";
+
+export { formatShiftTimeRange, isValidTimeToken, parseShiftTimeRange };
 
 export interface ShiftRef {
   day: DayKey;
@@ -25,36 +33,6 @@ export interface ShiftListing extends ShiftRef {
 export interface EmployeeOption {
   employee: string;
   role: string;
-}
-
-const TIME_TOKEN =
-  /(\d{1,2}:\d{2}\s*(?:AM|PM))\s*[-–—]\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i;
-const SINGLE_TIME = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i;
-
-export function parseShiftTimeRange(
-  timeRange: string,
-): { start: string; end: string } | null {
-  const match = timeRange.match(TIME_TOKEN);
-  if (!match) return null;
-  return {
-    start: normalizeTimeToken(match[1]),
-    end: normalizeTimeToken(match[2]),
-  };
-}
-
-export function formatShiftTimeRange(start: string, end: string): string {
-  return `${normalizeTimeToken(start)} - ${normalizeTimeToken(end)}`;
-}
-
-export function isValidTimeToken(value: string): boolean {
-  return SINGLE_TIME.test(value.trim());
-}
-
-function normalizeTimeToken(value: string): string {
-  const match = value.trim().match(SINGLE_TIME);
-  if (!match) return value.trim();
-  const hour = Number.parseInt(match[1], 10);
-  return `${hour}:${match[2]} ${match[3].toUpperCase()}`;
 }
 
 function getShiftAtRef(
@@ -157,12 +135,13 @@ export function assignShiftEmployee(
   schedule: ScheduleData,
   ref: ShiftRef,
   employee: string,
+  shiftHours?: ShiftHoursSettings,
 ): ScheduleData {
   const shift = getShiftAtRef(schedule, ref);
   if (!shift) return schedule;
 
   const timeRange =
-    shift.timeRange.trim() || defaultTimeForPeriod(ref.period);
+    shift.timeRange.trim() || defaultTimeForPeriod(ref.period, shiftHours);
 
   return normalizeScheduleAssignments({
     ...schedule,

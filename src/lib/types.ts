@@ -1,4 +1,5 @@
 import type { DayKey } from "./utils";
+import type { ShiftHoursSettings } from "./shift-hours";
 
 export type AvailabilityStatus =
   | "OPEN"
@@ -67,4 +68,6 @@ export interface AppDataState {
   priorSchedule: PriorSchedule | null;
   /** ISO date (YYYY-MM-DD) for the selected Wed–Tue scheduling week. */
   selectedWeekStart: string | null;
+  /** Default start/end times applied to AM and PM shifts. */
+  shiftHours: ShiftHoursSettings;
 }

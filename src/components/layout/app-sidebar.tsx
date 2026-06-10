@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Clock3,
   History,
   LayoutGrid,
   Settings2,
@@ -30,6 +31,11 @@ const NAV_ITEMS = [
     href: "/prior-schedule",
     label: "Prior Schedule",
     icon: History,
+  },
+  {
+    href: "/shift-hours",
+    label: "Shift Hours",
+    icon: Clock3,
   },
   {
     href: "/settings",

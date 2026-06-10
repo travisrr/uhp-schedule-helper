@@ -11,13 +11,15 @@ import type {
 import { DAYS, type DayKey } from "../utils";
 import { ensureManagementSlot } from "../schedule-management-roles";
 import {
+  DEFAULT_SHIFT_HOURS,
+  timeRangeForPeriod,
+  type ShiftHoursSettings,
+} from "../shift-hours";
+import {
   buildDayDateLabels,
   formatGeneratedTimestamp,
   toISODateString,
 } from "../week-utils";
-
-const DEFAULT_AM_TIME = "10:30 AM - 4:00 PM";
-const DEFAULT_PM_TIME = "4:00 PM - 10:00 PM";
 
 function canWorkAM(status: AvailabilityStatus): boolean {
   const trimmed = status.trim();
@@ -151,6 +153,7 @@ function addShiftToRoleMap(
 function generateFromAvailabilityOnly(
   availability: AvailabilityData,
   dateLabels: Record<DayKey, string>,
+  shiftHours: ShiftHoursSettings,
 ): ScheduleDay[] {
   return DAYS.map((dayKey) => {
     const day = createEmptyDay(dayKey, dateLabels[dayKey]);
@@ -168,14 +171,14 @@ function generateFromAvailabilityOnly(
       if (canWorkAM(status)) {
         addShiftToRoleMap(amByRole, getRoleName(employee.role), {
           employee: employee.employee,
-          timeRange: DEFAULT_AM_TIME,
+          timeRange: timeRangeForPeriod("AM", shiftHours),
         });
       }
 
       if (canWorkPM(status)) {
         addShiftToRoleMap(pmByRole, getRoleName(employee.role), {
           employee: employee.employee,
-          timeRange: DEFAULT_PM_TIME,
+          timeRange: timeRangeForPeriod("PM", shiftHours),
         });
       }
     }
@@ -193,6 +196,7 @@ function generateFromPriorSchedule(
   availability: AvailabilityData,
   dateLabels: Record<DayKey, string>,
   priorSchedule: ScheduleData,
+  shiftHours: ShiftHoursSettings,
 ): ScheduleDay[] {
   const availabilityLookup = buildAvailabilityLookup(availability);
 
@@ -226,7 +230,7 @@ function generateFromPriorSchedule(
               employee: employee.employee,
               timeRange:
                 shift.timeRange.trim() ||
-                (mealPeriod.period === "AM" ? DEFAULT_AM_TIME : DEFAULT_PM_TIME),
+                timeRangeForPeriod(mealPeriod.period, shiftHours),
             });
           }
         }
@@ -270,12 +274,18 @@ export function generateScheduleFromAvailability(
   availability: AvailabilityData,
   weekStartWednesday: Date,
   priorSchedule?: ScheduleData | null,
+  shiftHours: ShiftHoursSettings = DEFAULT_SHIFT_HOURS,
 ): GeneratedScheduleResult {
   const dateLabels = buildDayDateLabels(weekStartWednesday);
   const usedPriorBaseline = priorSchedule != null;
   const days = usedPriorBaseline
-    ? generateFromPriorSchedule(availability, dateLabels, priorSchedule)
-    : generateFromAvailabilityOnly(availability, dateLabels);
+    ? generateFromPriorSchedule(
+        availability,
+        dateLabels,
+        priorSchedule,
+        shiftHours,
+      )
+    : generateFromAvailabilityOnly(availability, dateLabels, shiftHours);
   const priorShiftCount = usedPriorBaseline
     ? countShiftsInDays(priorSchedule.days)
     : 0;

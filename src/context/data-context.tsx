@@ -16,6 +16,11 @@ import type {
   ScheduleData,
 } from "@/lib/types";
 import { normalizeScheduleAssignments } from "@/lib/schedule-management-roles";
+import {
+  createDefaultShiftHours,
+  normalizeShiftHours,
+  type ShiftHoursSettings,
+} from "@/lib/shift-hours";
 import { getDefaultWeekStart, toISODateString } from "@/lib/week-utils";
 
 const STORAGE_KEY = "uhp-schedule-helper-data";
@@ -25,6 +30,7 @@ interface AppDataContextValue extends AppDataState {
   setSchedule: (data: ScheduleData | null) => void;
   setPriorSchedule: (data: PriorSchedule | null) => void;
   setSelectedWeekStart: (weekStart: string | null) => void;
+  setShiftHours: (shiftHours: ShiftHoursSettings) => void;
   removeAvailabilityEmployee: (index: number) => void;
   clearAvailability: () => void;
   clearSchedule: () => void;
@@ -40,6 +46,7 @@ function createEmptyState(): AppDataState {
     schedule: null,
     priorSchedule: null,
     selectedWeekStart: toISODateString(getDefaultWeekStart()),
+    shiftHours: createDefaultShiftHours(),
   };
 }
 
@@ -62,6 +69,7 @@ function loadStoredState(): AppDataState {
       priorSchedule: parsed.priorSchedule ?? null,
       selectedWeekStart:
         parsed.selectedWeekStart ?? toISODateString(getDefaultWeekStart()),
+      shiftHours: normalizeShiftHours(parsed.shiftHours),
     };
   } catch {
     return createEmptyState();
@@ -101,6 +109,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, selectedWeekStart }));
   }, []);
 
+  const setShiftHours = useCallback((shiftHours: ShiftHoursSettings) => {
+    setState((prev) => ({ ...prev, shiftHours }));
+  }, []);
+
   const removeAvailabilityEmployee = useCallback((index: number) => {
     setState((prev) => {
       if (!prev.availability) return prev;
@@ -125,7 +137,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearAll = useCallback(() => {
-    setState(createEmptyState());
+    setState((prev) => ({
+      ...createEmptyState(),
+      shiftHours: prev.shiftHours,
+    }));
   }, []);
 
   const value = useMemo(
@@ -135,6 +150,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setSchedule,
       setPriorSchedule,
       setSelectedWeekStart,
+      setShiftHours,
       removeAvailabilityEmployee,
       clearAvailability,
       clearSchedule,
@@ -147,6 +163,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setSchedule,
       setPriorSchedule,
       setSelectedWeekStart,
+      setShiftHours,
       removeAvailabilityEmployee,
       clearAvailability,
       clearSchedule,

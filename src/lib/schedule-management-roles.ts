@@ -5,13 +5,15 @@ import type {
   ScheduleDay,
   ShiftAssignment,
 } from "./types";
+import {
+  DEFAULT_SHIFT_HOURS,
+  timeRangeForPeriod,
+  type ShiftHoursSettings,
+} from "./shift-hours";
 
 export const DEFAULT_AM_MANAGEMENT_ROLE = "FOH Manager (from Schedule)";
 export const DEFAULT_PM_MANAGEMENT_ROLE =
   "Shift Supervisor (Hourly) (from Schedule)";
-
-const DEFAULT_AM_TIME = "10:30 AM - 4:00 PM";
-const DEFAULT_PM_TIME = "4:00 PM - 10:00 PM";
 
 export function isFohManagementRole(role: string): boolean {
   const lower = role.trim().toLowerCase();
@@ -25,8 +27,11 @@ export function defaultManagementRoleForPeriod(period: "AM" | "PM"): string {
   return period === "AM" ? DEFAULT_AM_MANAGEMENT_ROLE : DEFAULT_PM_MANAGEMENT_ROLE;
 }
 
-export function defaultTimeForPeriod(period: "AM" | "PM"): string {
-  return period === "AM" ? DEFAULT_AM_TIME : DEFAULT_PM_TIME;
+export function defaultTimeForPeriod(
+  period: "AM" | "PM",
+  shiftHours: ShiftHoursSettings = DEFAULT_SHIFT_HOURS,
+): string {
+  return timeRangeForPeriod(period, shiftHours);
 }
 
 function createEmptyManagementShift(): ShiftAssignment {

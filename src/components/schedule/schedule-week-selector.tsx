@@ -21,6 +21,7 @@ export function ScheduleWeekSelector() {
     schedule,
     priorSchedule,
     selectedWeekStart,
+    shiftHours,
     setSelectedWeekStart,
     setSchedule,
   } = useAppData();
@@ -76,6 +77,7 @@ export function ScheduleWeekSelector() {
       availability,
       weekStart,
       priorSchedule.schedule,
+      shiftHours,
     );
     setSchedule(result.schedule);
     setSelectedWeekStart(toISODateString(weekStart));

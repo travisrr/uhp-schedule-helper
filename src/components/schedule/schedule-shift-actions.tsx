@@ -80,7 +80,7 @@ export function ScheduleShiftActionProvider({
     null,
   );
   const [timeTarget, setTimeTarget] = useState<ContextMenuTarget | null>(null);
-  const { availability } = useAppData();
+  const { availability, shiftHours } = useAppData();
 
   const isAssigning =
     swapTarget?.kind === "employee" && !swapTarget.employee.trim();
@@ -158,7 +158,12 @@ export function ScheduleShiftActionProvider({
   function handleAssignSelect(candidate: EmployeeOption) {
     if (!swapTarget || swapTarget.kind !== "employee") return;
     onScheduleChange(
-      assignShiftEmployee(schedule, swapTarget.ref, candidate.employee),
+      assignShiftEmployee(
+        schedule,
+        swapTarget.ref,
+        candidate.employee,
+        shiftHours,
+      ),
     );
     setSwapTarget(null);
   }
