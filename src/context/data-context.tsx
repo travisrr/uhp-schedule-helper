@@ -13,6 +13,7 @@ import type { AvailabilityStatusOption } from "@/lib/availability-utils";
 import type {
   AppDataState,
   AvailabilityData,
+  EmployeeAvailability,
   PersistedAppState,
   PriorSchedule,
   ScheduleData,
@@ -49,6 +50,7 @@ interface AppDataContextValue extends AppDataState {
   setPriorSchedule: (data: PriorSchedule | null) => void;
   setSelectedWeekStart: (weekStart: string | null) => void;
   setShiftHours: (shiftHours: ShiftHoursSettings) => void;
+  addAvailabilityEmployee: (employee: EmployeeAvailability) => void;
   removeAvailabilityEmployee: (index: number) => void;
   updateAvailabilityStatus: (
     employeeIndex: number,
@@ -188,6 +190,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, shiftHours }));
   }, []);
 
+  const addAvailabilityEmployee = useCallback((employee: EmployeeAvailability) => {
+    setState((prev) => ({
+      ...prev,
+      availability: {
+        employees: [...(prev.availability?.employees ?? []), employee],
+      },
+    }));
+  }, []);
+
   const removeAvailabilityEmployee = useCallback((index: number) => {
     setState((prev) => {
       if (!prev.availability) return prev;
@@ -258,6 +269,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setPriorSchedule,
       setSelectedWeekStart,
       setShiftHours,
+      addAvailabilityEmployee,
       removeAvailabilityEmployee,
       updateAvailabilityStatus,
       clearAvailability,
@@ -274,6 +286,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setPriorSchedule,
       setSelectedWeekStart,
       setShiftHours,
+      addAvailabilityEmployee,
       removeAvailabilityEmployee,
       updateAvailabilityStatus,
       clearAvailability,
