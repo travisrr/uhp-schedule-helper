@@ -20,15 +20,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useAppData } from "@/context/data-context";
 import {
+  assignShiftEmployee,
   clearShiftEmployee,
   formatShiftTimeRange,
   isValidTimeToken,
+  listAllEmployees,
   listShiftsInPeriod,
   parseShiftTimeRange,
   shiftsMatch,
   swapShiftEmployees,
   updateShiftTimeRange,
+  type EmployeeOption,
   type ShiftListing,
   type ShiftRef,
 } from "@/lib/schedule-mutations";
@@ -76,6 +80,10 @@ export function ScheduleShiftActionProvider({
     null,
   );
   const [timeTarget, setTimeTarget] = useState<ContextMenuTarget | null>(null);
+  const { availability } = useAppData();
+
+  const isAssigning =
+    swapTarget?.kind === "employee" && !swapTarget.employee.trim();
 
   useEffect(() => {
     if (!menu) return;
@@ -101,13 +109,18 @@ export function ScheduleShiftActionProvider({
     };
   }, [menu]);
 
+  const assignCandidates = useMemo(() => {
+    if (!isAssigning) return [];
+    return listAllEmployees(availability, schedule);
+  }, [availability, isAssigning, schedule]);
+
   const swapCandidates = useMemo(() => {
-    if (!swapTarget || swapTarget.kind !== "employee") return [];
+    if (!swapTarget || swapTarget.kind !== "employee" || isAssigning) return [];
 
     return listShiftsInPeriod(schedule, swapTarget.ref.day, swapTarget.ref.period).filter(
       (entry) => !shiftsMatch(entry, swapTarget.ref),
     );
-  }, [schedule, swapTarget]);
+  }, [isAssigning, schedule, swapTarget]);
 
   const parsedTimeRange = useMemo(() => {
     if (!timeTarget || timeTarget.kind !== "time") return null;
@@ -141,6 +154,14 @@ export function ScheduleShiftActionProvider({
     }),
     [],
   );
+
+  function handleAssignSelect(candidate: EmployeeOption) {
+    if (!swapTarget || swapTarget.kind !== "employee") return;
+    onScheduleChange(
+      assignShiftEmployee(schedule, swapTarget.ref, candidate.employee),
+    );
+    setSwapTarget(null);
+  }
 
   function handleSwapSelect(candidate: ShiftListing) {
     if (!swapTarget || swapTarget.kind !== "employee") return;
@@ -212,16 +233,19 @@ export function ScheduleShiftActionProvider({
         </div>
       ) : null}
 
-      <SwapEmployeeDialog
+      <EmployeePickerDialog
         open={swapTarget?.kind === "employee"}
+        mode={isAssigning ? "assign" : "swap"}
         sourceEmployee={
           swapTarget?.kind === "employee" ? swapTarget.employee : ""
         }
-        candidates={swapCandidates}
+        assignCandidates={assignCandidates}
+        swapCandidates={swapCandidates}
         onOpenChange={(open) => {
           if (!open) setSwapTarget(null);
         }}
-        onSelect={handleSwapSelect}
+        onAssign={handleAssignSelect}
+        onSwap={handleSwapSelect}
       />
 
       <RemoveEmployeeDialog
@@ -299,45 +323,83 @@ function RemoveEmployeeDialog({
   );
 }
 
-function SwapEmployeeDialog({
+function EmployeePickerDialog({
   open,
+  mode,
   sourceEmployee,
-  candidates,
+  assignCandidates,
+  swapCandidates,
   onOpenChange,
-  onSelect,
+  onAssign,
+  onSwap,
 }: {
   open: boolean;
+  mode: "assign" | "swap";
   sourceEmployee: string;
-  candidates: ShiftListing[];
+  assignCandidates: EmployeeOption[];
+  swapCandidates: ShiftListing[];
   onOpenChange: (open: boolean) => void;
-  onSelect: (candidate: ShiftListing) => void;
+  onAssign: (candidate: EmployeeOption) => void;
+  onSwap: (candidate: ShiftListing) => void;
 }) {
+  const isAssigning = mode === "assign";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <div className="space-y-1">
-            <DialogTitle>Swap employee</DialogTitle>
+            <DialogTitle>
+              {isAssigning ? "Assign employee" : "Swap employee"}
+            </DialogTitle>
             <DialogDescription>
-              Choose another shift on the same day and meal period to swap with{" "}
-              {sourceEmployee || "this employee"}.
+              {isAssigning
+                ? "Choose an employee to assign to this shift."
+                : `Choose another shift on the same day and meal period to swap with ${sourceEmployee || "this employee"}.`}
             </DialogDescription>
           </div>
         </DialogHeader>
 
         <DialogBody>
-          {candidates.length === 0 ? (
+          {isAssigning ? (
+            assignCandidates.length === 0 ? (
+              <p className="text-sm text-zinc-500">
+                No employees are available. Upload an availability sheet in
+                Settings to populate the roster.
+              </p>
+            ) : (
+              <div className="max-h-[min(24rem,60vh)] space-y-2 overflow-y-auto">
+                {assignCandidates.map((candidate) => (
+                  <button
+                    key={candidate.employee}
+                    type="button"
+                    className="flex w-full items-center justify-between gap-3 rounded-md border border-zinc-200 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+                    onClick={() => onAssign(candidate)}
+                  >
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                      {candidate.employee}
+                    </span>
+                    {candidate.role ? (
+                      <span className="text-xs text-zinc-500">
+                        {candidate.role}
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            )
+          ) : swapCandidates.length === 0 ? (
             <p className="text-sm text-zinc-500">
               No other shifts are available to swap on this day.
             </p>
           ) : (
             <div className="space-y-2">
-              {candidates.map((candidate) => (
+              {swapCandidates.map((candidate) => (
                 <button
                   key={`${candidate.role}-${candidate.shiftIndex}-${candidate.employee}`}
                   type="button"
                   className="flex w-full items-center justify-between gap-3 rounded-md border border-zinc-200 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
-                  onClick={() => onSelect(candidate)}
+                  onClick={() => onSwap(candidate)}
                 >
                   <span className="font-medium text-zinc-900 dark:text-zinc-100">
                     {candidate.employee.trim() || "—"}

@@ -1,9 +1,14 @@
 import type { DayKey } from "@/lib/utils";
 import {
+  defaultTimeForPeriod,
   isFohManagementRole,
   normalizeScheduleAssignments,
 } from "@/lib/schedule-management-roles";
-import type { ScheduleData, ShiftAssignment } from "@/lib/types";
+import type {
+  AvailabilityData,
+  ScheduleData,
+  ShiftAssignment,
+} from "@/lib/types";
 
 export interface ShiftRef {
   day: DayKey;
@@ -15,6 +20,11 @@ export interface ShiftRef {
 export interface ShiftListing extends ShiftRef {
   employee: string;
   timeRange: string;
+}
+
+export interface EmployeeOption {
+  employee: string;
+  role: string;
 }
 
 const TIME_TOKEN =
@@ -98,6 +108,91 @@ export function listShiftsInPeriod(
   }
 
   return listings;
+}
+
+function normalizeEmployeeKey(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+export function listAllEmployees(
+  availability: AvailabilityData | null,
+  schedule: ScheduleData,
+): EmployeeOption[] {
+  const seen = new Set<string>();
+  const options: EmployeeOption[] = [];
+
+  function addOption(employee: string, role: string) {
+    const trimmed = employee.trim();
+    if (!trimmed) return;
+
+    const key = normalizeEmployeeKey(trimmed);
+    if (seen.has(key)) return;
+
+    seen.add(key);
+    options.push({ employee: trimmed, role: role.trim() });
+  }
+
+  if (availability) {
+    for (const entry of availability.employees) {
+      addOption(entry.employee, entry.role);
+    }
+  }
+
+  for (const day of schedule.days) {
+    for (const periodBlock of day.mealPeriods) {
+      for (const roleBlock of periodBlock.roles) {
+        for (const shift of roleBlock.shifts) {
+          addOption(shift.employee, roleBlock.role);
+        }
+      }
+    }
+  }
+
+  return options.sort((left, right) =>
+    left.employee.localeCompare(right.employee),
+  );
+}
+
+export function assignShiftEmployee(
+  schedule: ScheduleData,
+  ref: ShiftRef,
+  employee: string,
+): ScheduleData {
+  const shift = getShiftAtRef(schedule, ref);
+  if (!shift) return schedule;
+
+  const timeRange =
+    shift.timeRange.trim() || defaultTimeForPeriod(ref.period);
+
+  return normalizeScheduleAssignments({
+    ...schedule,
+    days: schedule.days.map((day) => {
+      if (day.day !== ref.day) return day;
+
+      return {
+        ...day,
+        mealPeriods: day.mealPeriods.map((periodBlock) => {
+          if (periodBlock.period !== ref.period) return periodBlock;
+
+          return {
+            ...periodBlock,
+            roles: periodBlock.roles.map((roleBlock) => {
+              if (roleBlock.role !== ref.role) return roleBlock;
+
+              return {
+                ...roleBlock,
+                shifts: roleBlock.shifts.map((entry, shiftIndex) =>
+                  shiftIndex === ref.shiftIndex
+                    ? { employee: employee.trim(), timeRange }
+                    : entry,
+                ),
+              };
+            }),
+          };
+        }),
+      };
+    }),
+  });
 }
 
 export function clearShiftEmployee(
