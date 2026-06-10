@@ -9,7 +9,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { AppDataState, AvailabilityData, ScheduleData } from "@/lib/types";
+import type {
+  AppDataState,
+  AvailabilityData,
+  PriorSchedule,
+  ScheduleData,
+} from "@/lib/types";
 import { getDefaultWeekStart, toISODateString } from "@/lib/week-utils";
 
 const STORAGE_KEY = "uhp-schedule-helper-data";
@@ -17,10 +22,12 @@ const STORAGE_KEY = "uhp-schedule-helper-data";
 interface AppDataContextValue extends AppDataState {
   setAvailability: (data: AvailabilityData | null) => void;
   setSchedule: (data: ScheduleData | null) => void;
+  setPriorSchedule: (data: PriorSchedule | null) => void;
   setSelectedWeekStart: (weekStart: string | null) => void;
   removeAvailabilityEmployee: (index: number) => void;
   clearAvailability: () => void;
   clearSchedule: () => void;
+  clearPriorSchedule: () => void;
   clearAll: () => void;
 }
 
@@ -30,6 +37,7 @@ function createEmptyState(): AppDataState {
   return {
     availability: null,
     schedule: null,
+    priorSchedule: null,
     selectedWeekStart: toISODateString(getDefaultWeekStart()),
   };
 }
@@ -46,6 +54,7 @@ function loadStoredState(): AppDataState {
     return {
       availability: parsed.availability ?? null,
       schedule: parsed.schedule ?? null,
+      priorSchedule: parsed.priorSchedule ?? null,
       selectedWeekStart:
         parsed.selectedWeekStart ?? toISODateString(getDefaultWeekStart()),
     };
@@ -76,6 +85,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, schedule }));
   }, []);
 
+  const setPriorSchedule = useCallback((priorSchedule: PriorSchedule | null) => {
+    setState((prev) => ({ ...prev, priorSchedule }));
+  }, []);
+
   const setSelectedWeekStart = useCallback((selectedWeekStart: string | null) => {
     setState((prev) => ({ ...prev, selectedWeekStart }));
   }, []);
@@ -99,6 +112,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, schedule: null }));
   }, []);
 
+  const clearPriorSchedule = useCallback(() => {
+    setState((prev) => ({ ...prev, priorSchedule: null }));
+  }, []);
+
   const clearAll = useCallback(() => {
     setState(createEmptyState());
   }, []);
@@ -108,20 +125,24 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       ...state,
       setAvailability,
       setSchedule,
+      setPriorSchedule,
       setSelectedWeekStart,
       removeAvailabilityEmployee,
       clearAvailability,
       clearSchedule,
+      clearPriorSchedule,
       clearAll,
     }),
     [
       state,
       setAvailability,
       setSchedule,
+      setPriorSchedule,
       setSelectedWeekStart,
       removeAvailabilityEmployee,
       clearAvailability,
       clearSchedule,
+      clearPriorSchedule,
       clearAll,
     ],
   );

@@ -16,8 +16,14 @@ import {
 import { cn } from "@/lib/utils";
 
 export function ScheduleWeekSelector() {
-  const { availability, schedule, selectedWeekStart, setSelectedWeekStart, setSchedule } =
-    useAppData();
+  const {
+    availability,
+    schedule,
+    priorSchedule,
+    selectedWeekStart,
+    setSelectedWeekStart,
+    setSchedule,
+  } = useAppData();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const weekStart = useMemo(() => {
@@ -59,11 +65,17 @@ export function ScheduleWeekSelector() {
       return;
     }
 
-    const generated = generateScheduleFromAvailability(availability, weekStart);
+    const generated = generateScheduleFromAvailability(
+      availability,
+      weekStart,
+      priorSchedule?.schedule,
+    );
     setSchedule(generated);
     setSelectedWeekStart(toISODateString(weekStart));
     setStatusMessage(
-      `Built schedule for ${availability.employees.length} employees across ${weekRangeLabel}.`,
+      priorSchedule
+        ? `Built schedule for ${availability.employees.length} employees across ${weekRangeLabel} using the prior schedule baseline.`
+        : `Built schedule for ${availability.employees.length} employees across ${weekRangeLabel}.`,
     );
   }
 
@@ -76,7 +88,8 @@ export function ScheduleWeekSelector() {
             Schedule Week
           </div>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Pick the Wed–Tue period, then generate shift assignments from staff availability.
+            Pick the Wed–Tue period, then generate shift assignments from staff availability
+            {priorSchedule ? " and your imported prior schedule baseline." : "."}
           </p>
         </div>
 
@@ -125,11 +138,22 @@ export function ScheduleWeekSelector() {
       </div>
 
       <div className="mt-4 flex flex-col gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {canGenerate
-            ? `${employeeCount} employees loaded from availability.`
-            : "No availability data yet. Upload a sheet in Settings to enable scheduling."}
-        </p>
+        <div className="space-y-1">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            {canGenerate
+              ? `${employeeCount} employees loaded from availability.`
+              : "No availability data yet. Upload a sheet in Settings to enable scheduling."}
+          </p>
+          {priorSchedule ? (
+            <p className="text-xs text-emerald-700 dark:text-emerald-400">
+              Prior schedule baseline active ({priorSchedule.fileName}).
+            </p>
+          ) : (
+            <p className="text-xs text-zinc-500">
+              No prior schedule baseline. Import one from the Prior Schedule page to seed role and time assignments.
+            </p>
+          )}
+        </div>
 
         <Button
           type="button"

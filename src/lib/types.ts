@@ -54,9 +54,17 @@ export interface ScheduleData {
   days: ScheduleDay[];
 }
 
+export interface PriorSchedule {
+  schedule: ScheduleData;
+  fileName: string;
+  importedAt: string;
+}
+
 export interface AppDataState {
   availability: AvailabilityData | null;
   schedule: ScheduleData | null;
+  /** Imported prior-week schedule used as a template when generating new schedules. */
+  priorSchedule: PriorSchedule | null;
   /** ISO date (YYYY-MM-DD) for the selected Wed–Tue scheduling week. */
   selectedWeekStart: string | null;
 }

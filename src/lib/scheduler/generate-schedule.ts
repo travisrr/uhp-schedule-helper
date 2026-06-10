@@ -75,11 +75,73 @@ function getMealBlock(day: ScheduleDay, period: "AM" | "PM"): MealPeriodBlock {
   );
 }
 
+interface PriorShiftTemplate {
+  role: string;
+  timeRange: string;
+}
+
+type PriorDayLookup = Map<"AM" | "PM", PriorShiftTemplate>;
+type PriorEmployeeLookup = Map<string, Map<DayKey, PriorDayLookup>>;
+
+function normalizeEmployeeName(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+function buildPriorScheduleLookup(schedule: ScheduleData): PriorEmployeeLookup {
+  const lookup: PriorEmployeeLookup = new Map();
+
+  for (const day of schedule.days) {
+    for (const mealPeriod of day.mealPeriods) {
+      for (const roleBlock of mealPeriod.roles) {
+        for (const shift of roleBlock.shifts) {
+          const employeeKey = normalizeEmployeeName(shift.employee);
+          if (!employeeKey) continue;
+
+          let dayLookup = lookup.get(employeeKey);
+          if (!dayLookup) {
+            dayLookup = new Map();
+            lookup.set(employeeKey, dayLookup);
+          }
+
+          let periodLookup = dayLookup.get(day.day);
+          if (!periodLookup) {
+            periodLookup = new Map();
+            dayLookup.set(day.day, periodLookup);
+          }
+
+          periodLookup.set(mealPeriod.period, {
+            role: getRoleName(roleBlock.role),
+            timeRange: shift.timeRange.trim() || (
+              mealPeriod.period === "AM" ? DEFAULT_AM_TIME : DEFAULT_PM_TIME
+            ),
+          });
+        }
+      }
+    }
+  }
+
+  return lookup;
+}
+
+function addShiftToRoleMap(
+  roleMap: Map<string, ShiftAssignment[]>,
+  role: string,
+  shift: ShiftAssignment,
+): void {
+  const shifts = roleMap.get(role) ?? [];
+  shifts.push(shift);
+  roleMap.set(role, shifts);
+}
+
 export function generateScheduleFromAvailability(
   availability: AvailabilityData,
   weekStartWednesday: Date,
+  priorSchedule?: ScheduleData | null,
 ): ScheduleData {
   const dateLabels = buildDayDateLabels(weekStartWednesday);
+  const priorLookup = priorSchedule
+    ? buildPriorScheduleLookup(priorSchedule)
+    : null;
 
   const days = DAYS.map((dayKey) => {
     const day = createEmptyDay(dayKey, dateLabels[dayKey]);
@@ -88,24 +150,27 @@ export function generateScheduleFromAvailability(
 
     for (const employee of availability.employees) {
       const status = employee.days[dayKey];
-      const role = getRoleName(employee.role);
+      const employeeKey = normalizeEmployeeName(employee.employee);
+      const priorDay = priorLookup?.get(employeeKey)?.get(dayKey);
 
       if (canWorkAM(status)) {
-        const shifts = amByRole.get(role) ?? [];
-        shifts.push({
+        const priorAM = priorDay?.get("AM");
+        const role = priorAM?.role ?? getRoleName(employee.role);
+        const timeRange = priorAM?.timeRange ?? DEFAULT_AM_TIME;
+        addShiftToRoleMap(amByRole, role, {
           employee: employee.employee,
-          timeRange: DEFAULT_AM_TIME,
+          timeRange,
         });
-        amByRole.set(role, shifts);
       }
 
       if (canWorkPM(status)) {
-        const shifts = pmByRole.get(role) ?? [];
-        shifts.push({
+        const priorPM = priorDay?.get("PM");
+        const role = priorPM?.role ?? getRoleName(employee.role);
+        const timeRange = priorPM?.timeRange ?? DEFAULT_PM_TIME;
+        addShiftToRoleMap(pmByRole, role, {
           employee: employee.employee,
-          timeRange: DEFAULT_PM_TIME,
+          timeRange,
         });
-        pmByRole.set(role, shifts);
       }
     }
 

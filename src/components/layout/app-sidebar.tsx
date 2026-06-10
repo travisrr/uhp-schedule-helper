@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  History,
   LayoutGrid,
   Settings2,
 } from "lucide-react";
@@ -24,6 +25,11 @@ const NAV_ITEMS = [
     href: "/schedule",
     label: "Shift Report",
     icon: LayoutGrid,
+  },
+  {
+    href: "/prior-schedule",
+    label: "Prior Schedule",
+    icon: History,
   },
   {
     href: "/settings",
@@ -112,7 +118,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         <ThemeToggle collapsed={collapsed} />
         {!collapsed ? (
           <p className="px-1 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-600">
-            Import roster and schedule files from Settings to sync both dashboards.
+            Import availability in Settings and a prior schedule to seed future weeks.
           </p>
         ) : null}
       </div>
