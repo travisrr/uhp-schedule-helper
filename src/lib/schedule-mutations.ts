@@ -96,6 +96,44 @@ export function listShiftsInPeriod(
   return listings;
 }
 
+export function clearShiftEmployee(
+  schedule: ScheduleData,
+  ref: ShiftRef,
+): ScheduleData {
+  const shift = getShiftAtRef(schedule, ref);
+  if (!shift) return schedule;
+
+  return {
+    ...schedule,
+    days: schedule.days.map((day) => {
+      if (day.day !== ref.day) return day;
+
+      return {
+        ...day,
+        mealPeriods: day.mealPeriods.map((periodBlock) => {
+          if (periodBlock.period !== ref.period) return periodBlock;
+
+          return {
+            ...periodBlock,
+            roles: periodBlock.roles.map((roleBlock) => {
+              if (roleBlock.role !== ref.role) return roleBlock;
+
+              return {
+                ...roleBlock,
+                shifts: roleBlock.shifts.map((entry, shiftIndex) =>
+                  shiftIndex === ref.shiftIndex
+                    ? { ...entry, employee: "" }
+                    : entry,
+                ),
+              };
+            }),
+          };
+        }),
+      };
+    }),
+  };
+}
+
 export function swapShiftEmployees(
   schedule: ScheduleData,
   source: ShiftRef,

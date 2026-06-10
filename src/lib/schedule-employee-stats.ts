@@ -56,7 +56,10 @@ export function computeEmployeeWeeklyStats(
     for (const period of day.mealPeriods) {
       for (const roleBlock of period.roles) {
         for (const shift of roleBlock.shifts) {
-          const key = normalizeEmployeeName(shift.employee);
+          const trimmed = shift.employee.trim();
+          if (!trimmed) continue;
+
+          const key = normalizeEmployeeName(trimmed);
           const existing = byKey.get(key);
 
           if (existing) {
@@ -71,7 +74,7 @@ export function computeEmployeeWeeklyStats(
 
           const hours = hoursFromTimeRange(shift.timeRange);
           byKey.set(key, {
-            employee: shift.employee.trim(),
+            employee: trimmed,
             totalHours: hours ?? 0,
             totalShifts: 1,
             amShifts: period.period === "AM" ? 1 : 0,

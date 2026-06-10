@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { ArrowLeftRight, Clock3 } from "lucide-react";
+import { ArrowLeftRight, Clock3, UserMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
+  clearShiftEmployee,
   formatShiftTimeRange,
   isValidTimeToken,
   listShiftsInPeriod,
@@ -71,6 +72,9 @@ export function ScheduleShiftActionProvider({
     (ContextMenuTarget & { x: number; y: number }) | null
   >(null);
   const [swapTarget, setSwapTarget] = useState<ContextMenuTarget | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<ContextMenuTarget | null>(
+    null,
+  );
   const [timeTarget, setTimeTarget] = useState<ContextMenuTarget | null>(null);
 
   useEffect(() => {
@@ -146,6 +150,12 @@ export function ScheduleShiftActionProvider({
     setSwapTarget(null);
   }
 
+  function handleRemoveConfirm() {
+    if (!removeTarget || removeTarget.kind !== "employee") return;
+    onScheduleChange(clearShiftEmployee(schedule, removeTarget.ref));
+    setRemoveTarget(null);
+  }
+
   return (
     <ScheduleShiftActionContext.Provider value={handlers}>
       {children}
@@ -158,17 +168,32 @@ export function ScheduleShiftActionProvider({
           onContextMenu={(event) => event.preventDefault()}
         >
           {menu.kind === "employee" ? (
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-900"
-              onClick={() => {
-                setSwapTarget(menu);
-                setMenu(null);
-              }}
-            >
-              <ArrowLeftRight className="size-4 shrink-0 text-zinc-500" />
-              Swap with another employee
-            </button>
+            <>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-900"
+                onClick={() => {
+                  setSwapTarget(menu);
+                  setMenu(null);
+                }}
+              >
+                <ArrowLeftRight className="size-4 shrink-0 text-zinc-500" />
+                Swap with another employee
+              </button>
+              {menu.employee.trim() ? (
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+                  onClick={() => {
+                    setRemoveTarget(menu);
+                    setMenu(null);
+                  }}
+                >
+                  <UserMinus className="size-4 shrink-0" />
+                  Remove from shift
+                </button>
+              ) : null}
+            </>
           ) : (
             <button
               type="button"
@@ -197,6 +222,17 @@ export function ScheduleShiftActionProvider({
         onSelect={handleSwapSelect}
       />
 
+      <RemoveEmployeeDialog
+        open={removeTarget?.kind === "employee"}
+        employeeName={
+          removeTarget?.kind === "employee" ? removeTarget.employee : ""
+        }
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null);
+        }}
+        onConfirm={handleRemoveConfirm}
+      />
+
       <AdjustShiftTimeDialog
         open={timeTarget?.kind === "time"}
         initialStart={parsedTimeRange?.start ?? ""}
@@ -217,6 +253,47 @@ export function ScheduleShiftActionProvider({
         }}
       />
     </ScheduleShiftActionContext.Provider>
+  );
+}
+
+function RemoveEmployeeDialog({
+  open,
+  employeeName,
+  onOpenChange,
+  onConfirm,
+}: {
+  open: boolean;
+  employeeName: string;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <div className="space-y-1">
+            <DialogTitle>Remove from shift</DialogTitle>
+            <DialogDescription>
+              Remove {employeeName || "this employee"} from this shift? The time
+              slot will stay open for reassignment.
+            </DialogDescription>
+          </div>
+        </DialogHeader>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
+            onClick={onConfirm}
+          >
+            Remove
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -260,8 +337,13 @@ function SwapEmployeeDialog({
                   className="flex w-full items-center justify-between gap-3 rounded-md border border-zinc-200 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
                   onClick={() => onSelect(candidate)}
                 >
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                    {candidate.employee}
+                  <span
+                    className={cn(
+                      "font-medium text-zinc-900 dark:text-zinc-100",
+                      !candidate.employee.trim() && "italic text-zinc-400",
+                    )}
+                  >
+                    {candidate.employee.trim() || "Unassigned"}
                   </span>
                   <span className="text-xs text-zinc-500">
                     {candidate.role} · {candidate.timeRange}
