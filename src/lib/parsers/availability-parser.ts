@@ -1,3 +1,4 @@
+import { availabilityEmployeeKey } from "../availability-keys";
 import type { AvailabilityData, EmployeeAvailability } from "../types";
 import { DAYS, type DayKey } from "../utils";
 import {
@@ -222,10 +223,6 @@ export function parseAvailabilitySheet(
   return { employees };
 }
 
-function normalizeEmployeeKey(name: string): string {
-  return name.trim().toLowerCase();
-}
-
 function availabilityStatusRank(status: string): number {
   const trimmed = status.trim();
   if (!trimmed || trimmed.toUpperCase() === "OFF") return 0;
@@ -246,14 +243,14 @@ function mergeAvailabilityStatus(
 function mergeAvailabilityEmployees(
   employees: EmployeeAvailability[],
 ): EmployeeAvailability[] {
-  const byName = new Map<string, EmployeeAvailability>();
+  const byEmployeeRole = new Map<string, EmployeeAvailability>();
 
   for (const employee of employees) {
-    const key = normalizeEmployeeKey(employee.employee);
-    const existing = byName.get(key);
+    const key = availabilityEmployeeKey(employee);
+    const existing = byEmployeeRole.get(key);
 
     if (!existing) {
-      byName.set(key, {
+      byEmployeeRole.set(key, {
         ...employee,
         days: { ...employee.days },
       });
@@ -268,13 +265,13 @@ function mergeAvailabilityEmployees(
       );
     }
 
-    byName.set(key, {
+    byEmployeeRole.set(key, {
       ...existing,
       days: mergedDays,
     });
   }
 
-  return [...byName.values()];
+  return [...byEmployeeRole.values()];
 }
 
 export function parseAvailabilityWorkbook(

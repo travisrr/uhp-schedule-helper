@@ -1,3 +1,7 @@
+import {
+  availabilityEmployeeKey,
+  normalizeAvailabilityRole,
+} from "@/lib/availability-keys";
 import type { AvailabilityData, EmployeeAvailability } from "@/lib/types";
 
 export interface AvailabilityRoleChange {
@@ -15,25 +19,17 @@ export interface AvailabilityDiff {
 
 export type AvailabilityChangeKey = `add:${string}` | `role:${string}`;
 
-function normalizeName(name: string): string {
-  return name.trim().toLowerCase();
-}
-
-function normalizeRole(role: string): string {
-  return role.trim().toLowerCase();
-}
-
 function displayRole(role: string): string {
   const trimmed = role.trim();
   return trimmed || "—";
 }
 
-function indexByEmployee(
+function indexByEmployeeRole(
   employees: EmployeeAvailability[],
 ): Map<string, EmployeeAvailability> {
   const map = new Map<string, EmployeeAvailability>();
   for (const employee of employees) {
-    map.set(normalizeName(employee.employee), employee);
+    map.set(availabilityEmployeeKey(employee), employee);
   }
   return map;
 }
@@ -46,13 +42,13 @@ export function computeAvailabilityDiff(
     return { added: [], roleChanges: [], needsReview: false };
   }
 
-  const currentByName = indexByEmployee(current.employees);
+  const currentByKey = indexByEmployeeRole(current.employees);
   const added: EmployeeAvailability[] = [];
   const roleChanges: AvailabilityRoleChange[] = [];
 
   for (const employee of incoming.employees) {
-    const key = normalizeName(employee.employee);
-    const existing = currentByName.get(key);
+    const key = availabilityEmployeeKey(employee);
+    const existing = currentByKey.get(key);
 
     if (!existing) {
       added.push(employee);
@@ -60,7 +56,8 @@ export function computeAvailabilityDiff(
     }
 
     if (
-      normalizeRole(existing.role) !== normalizeRole(employee.role)
+      normalizeAvailabilityRole(existing.role) !==
+      normalizeAvailabilityRole(employee.role)
     ) {
       roleChanges.push({
         employee: employee.employee,
@@ -79,13 +76,13 @@ export function computeAvailabilityDiff(
 }
 
 export function changeKeyForAdded(employee: EmployeeAvailability): AvailabilityChangeKey {
-  return `add:${normalizeName(employee.employee)}`;
+  return `add:${availabilityEmployeeKey(employee)}`;
 }
 
 export function changeKeyForRoleChange(
   change: AvailabilityRoleChange,
 ): AvailabilityChangeKey {
-  return `role:${normalizeName(change.employee)}`;
+  return `role:${availabilityEmployeeKey(change.incoming)}`;
 }
 
 export function getAllChangeKeys(diff: AvailabilityDiff): AvailabilityChangeKey[] {
@@ -101,29 +98,29 @@ export function applySelectiveAvailabilityUpload(
   acceptedKeys: ReadonlySet<AvailabilityChangeKey>,
 ): AvailabilityData {
   const diff = computeAvailabilityDiff(current, incoming);
-  const currentByName = indexByEmployee(current?.employees ?? []);
+  const currentByKey = indexByEmployeeRole(current?.employees ?? []);
   const deniedAdds = new Set(
     diff.added
       .filter((employee) => !acceptedKeys.has(changeKeyForAdded(employee)))
-      .map((employee) => normalizeName(employee.employee)),
+      .map((employee) => availabilityEmployeeKey(employee)),
   );
   const deniedRoleChanges = new Set(
     diff.roleChanges
       .filter((change) => !acceptedKeys.has(changeKeyForRoleChange(change)))
-      .map((change) => normalizeName(change.employee)),
+      .map((change) => availabilityEmployeeKey(change.incoming)),
   );
 
   const employees: EmployeeAvailability[] = [];
 
   for (const employee of incoming.employees) {
-    const key = normalizeName(employee.employee);
+    const key = availabilityEmployeeKey(employee);
 
     if (deniedAdds.has(key)) {
       continue;
     }
 
     if (deniedRoleChanges.has(key)) {
-      const existing = currentByName.get(key);
+      const existing = currentByKey.get(key);
       if (existing) {
         employees.push(existing);
       }

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAppData } from "@/context/data-context";
 import { parseScheduleSheet } from "@/lib/parsers/schedule-parser";
+import { uploadPersistedFile } from "@/lib/storage-sync";
 import {
   formatWeekRange,
   parseISODateString,
@@ -87,7 +88,7 @@ export function PriorSchedulePageContent() {
           description="Upload a completed weekly shift report (.csv, .xlsx, .xls). This becomes the template for future schedule generation."
           parse={parseScheduleSheet}
           lastUploaded={priorSchedule?.fileName ?? null}
-          onSuccess={(fileName, data) => {
+          onSuccess={(fileName, data, file) => {
             setPriorSchedule({
               schedule: data,
               fileName,
@@ -98,6 +99,7 @@ export function PriorSchedulePageContent() {
               `Prior schedule loaded: ${countActiveDays(data)} active days, ${countAssignedShifts(data)} shift assignments. Re-generate on Shift Report to apply.`,
             );
             setError(null);
+            void uploadPersistedFile("prior-schedule", file);
           }}
           onError={(message) => {
             setError(message);

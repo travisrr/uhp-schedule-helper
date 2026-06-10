@@ -1,0 +1,1710 @@
+{
+  "availability": {
+    "employees": [
+      {
+        "employee": "Teira  Ila",
+        "role": "Admin - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Joanna  Wyzgowska",
+        "role": "Admin - Management",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "Only AM",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Rachel  Brunet",
+        "role": "Bartenders - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "Only PM",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Joanna  Wyzgowska",
+        "role": "Bartenders - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "Only AM",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Madison  Lawrence",
+        "role": "Bartenders - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Jayson  Ficili",
+        "role": "Bartenders - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OPEN",
+          "Fri": "OFF",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Evan  Childers",
+        "role": "Bartenders - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "OFF",
+          "Fri": "Only PM",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Virginia  Haladyna",
+        "role": "Bartenders - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OFF",
+          "Fri": "OPEN",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Meredith  Johnson",
+        "role": "Bartenders - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Ian  Costello",
+        "role": "Bartenders - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Jeffrey  Martin",
+        "role": "BOH Manager - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Carlos  Molohoa",
+        "role": "BOH Manager - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Pedro  Perez",
+        "role": "BOH Manager - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Joanna  Wyzgowska",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "Only AM",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Jayson  Ficili",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OPEN",
+          "Fri": "OFF",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Dean  Polizos",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only PM",
+          "Fri": "Only PM",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "Only PM",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Giselle  San Filippo",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Rachel  Brunet",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "Only PM",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Kris Ann  Swenson",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "Only PM",
+          "Fri": "Only PM",
+          "Sat": "OPEN",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Larissa  Stine",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only PM",
+          "Fri": "Only AM",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "Only AM",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Thomas  Malone",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OFF",
+          "Mon": "Only PM",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Tyler  Monie",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "Only AM",
+          "Mon": "Only AM",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Jose  Gutierrez  Hernandez",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Pedro  Perez",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Madison  Lawrence",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Virginia  Haladyna",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OFF",
+          "Fri": "OPEN",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Meredith  Johnson",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Chloe  Colaianni",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OPEN",
+          "Fri": "Only AM",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Tyler  Buckley",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "OPEN",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Karen  Mason",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Paige  Anderson",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 6
+      },
+      {
+        "employee": "Lauren  Claxton",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only PM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "Only PM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Francziska  Jordan",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Colin  Howard",
+        "role": "Company Training - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "Only AM",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Humberto  Aviles",
+        "role": "Dishwashers - BOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Pedro  Perez",
+        "role": "Dishwashers - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Juliana  Suarez Ramos",
+        "role": "Dishwashers - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Franklin  Vargas",
+        "role": "Dishwashers - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Victoria  Young",
+        "role": "Dishwashers - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Kenneth  Jones",
+        "role": "Dishwashers - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Kendall  Jackson",
+        "role": "Dishwashers - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Larissa  Stine",
+        "role": "Event Coordinator (Hourly) - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only PM",
+          "Fri": "Only AM",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "Only AM",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Ian  Costello",
+        "role": "Expeditor - BOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Larissa  Stine",
+        "role": "Expeditor - BOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only PM",
+          "Fri": "Only AM",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "Only AM",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Tyler  Monie",
+        "role": "Expeditor - BOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "Only AM",
+          "Mon": "Only AM",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Paige  Anderson",
+        "role": "Expeditor - BOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 6
+      },
+      {
+        "employee": "Tyler  Monie",
+        "role": "Expo - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "Only AM",
+          "Mon": "Only AM",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Ian  Costello",
+        "role": "Expo - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Madison  Lawrence",
+        "role": "Expo - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Kris Ann  Swenson",
+        "role": "Expo - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "Only PM",
+          "Fri": "Only PM",
+          "Sat": "OPEN",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Larissa  Stine",
+        "role": "Expo - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only PM",
+          "Fri": "Only AM",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "Only AM",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Sean  Lyons",
+        "role": "FOH Manager - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Keely  Maynard",
+        "role": "FOH Manager - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Danielle  White",
+        "role": "FOH Manager - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Alex  Carey",
+        "role": "FOH Manager - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Travis  Avery",
+        "role": "FOH Manager - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Madison  Lawrence",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Tyler  Monie",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "Only AM",
+          "Mon": "Only AM",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Kris Ann  Swenson",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "Only PM",
+          "Fri": "Only PM",
+          "Sat": "OPEN",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Larissa  Stine",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only PM",
+          "Fri": "Only AM",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "Only AM",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Ian  Costello",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Virginia  Haladyna",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OFF",
+          "Fri": "OPEN",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Chloe  Colaianni",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OPEN",
+          "Fri": "Only AM",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Tyler  Buckley",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Karen  Mason",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Paige  Anderson",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 6
+      },
+      {
+        "employee": "Lauren  Claxton",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only PM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "Only PM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Francziska  Jordan",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Colin  Howard",
+        "role": "Host - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "Only AM",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Jose  Gutierrez  Hernandez",
+        "role": "Lead Cook - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Humberto  Aviles",
+        "role": "Line Cook - BOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Tyler  Monie",
+        "role": "Line Cook - BOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "Only AM",
+          "Mon": "Only AM",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Jose  Gutierrez  Hernandez",
+        "role": "Line Cook - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Franklin  Vargas",
+        "role": "Line Cook - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Pedro  Perez",
+        "role": "Line Cook - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Juliana  Suarez Ramos",
+        "role": "Line Cook - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Emily  Lindgren",
+        "role": "Line Cook - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Layne  Bielby",
+        "role": "Line Cook - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Matt  Elkins",
+        "role": "MIT - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Sean  Lyons",
+        "role": "Owner - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Juliana  Suarez Ramos",
+        "role": "Prep Cook - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Tyler  Monie",
+        "role": "Prep Cook - BOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "Only AM",
+          "Mon": "Only AM",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Humberto  Aviles",
+        "role": "Prep Cook - BOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Pedro  Perez",
+        "role": "Prep Cook - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Emily  Lindgren",
+        "role": "Prep Cook - BOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Kris Ann  Swenson",
+        "role": "RBR - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "Only PM",
+          "Fri": "Only PM",
+          "Sat": "OPEN",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Paige  Anderson",
+        "role": "RBR - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 6
+      },
+      {
+        "employee": "Dean  Polizos",
+        "role": "RBR - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only PM",
+          "Fri": "Only PM",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "Only PM",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Kimara  Peoples",
+        "role": "RBR - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Ian  Costello",
+        "role": "Shift Supervisor (Hourly) - Management",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Dean  Polizos",
+        "role": "Shift Supervisor (Hourly) - Management",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only PM",
+          "Fri": "Only PM",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "Only PM",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Madison  Lawrence",
+        "role": "Shift Supervisor (Hourly) - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Kris Ann  Swenson",
+        "role": "Shift Supervisor (Hourly) - Management",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "Only PM",
+          "Fri": "Only PM",
+          "Sat": "OPEN",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Layne  Bielby",
+        "role": "Shift Supervisor (Hourly) - Management",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Rachel  Brunet",
+        "role": "Training - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "Only PM",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Madison  Lawrence",
+        "role": "Training - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Virginia  Haladyna",
+        "role": "Training - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OFF",
+          "Fri": "OPEN",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Meredith  Johnson",
+        "role": "Training - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Tyler  Buckley",
+        "role": "Training - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Karen  Mason",
+        "role": "Training - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Paige  Anderson",
+        "role": "Training - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 6
+      },
+      {
+        "employee": "Lauren  Claxton",
+        "role": "Training - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only PM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "Only PM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Francziska  Jordan",
+        "role": "Training - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Colin  Howard",
+        "role": "Training - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "Only AM",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Alex  Carey",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OFF",
+          "Fri": "OFF",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Rachel  Brunet",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "Only PM",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Giselle  San Filippo",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Joanna  Wyzgowska",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "Only AM",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Thomas  Malone",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OFF",
+          "Mon": "Only PM",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Dean  Polizos",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only PM",
+          "Fri": "Only PM",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "Only PM",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Madison  Lawrence",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Larissa  Stine",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only PM",
+          "Fri": "Only AM",
+          "Sat": "OFF",
+          "Sun": "OFF",
+          "Mon": "Only AM",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Jayson  Ficili",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "OFF",
+          "Thu": "OPEN",
+          "Fri": "OFF",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Kris Ann  Swenson",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "Only PM",
+          "Thu": "Only PM",
+          "Fri": "Only PM",
+          "Sat": "OPEN",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Virginia  Haladyna",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OFF",
+          "Fri": "OPEN",
+          "Sat": "Only AM",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OFF"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Meredith  Johnson",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "Only AM"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Chloe  Colaianni",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "OPEN",
+          "Fri": "Only AM",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Tyler  Buckley",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OFF",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Karen  Mason",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "OPEN",
+          "Fri": "OPEN",
+          "Sat": "OPEN",
+          "Sun": "OPEN",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 0
+      },
+      {
+        "employee": "Paige  Anderson",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "OPEN",
+          "Thu": "Only AM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OPEN",
+          "Tue": "OPEN"
+        },
+        "totalShifts": 6
+      },
+      {
+        "employee": "Lauren  Claxton",
+        "role": "Wait Staff (Servers) - FOH",
+        "days": {
+          "Wed": "Only AM",
+          "Thu": "Only PM",
+          "Fri": "Only AM",
+          "Sat": "Only AM",
+          "Sun": "OFF",
+          "Mon": "OFF",
+          "Tue": "Only PM"
+        },
+        "totalShifts": 0
+      }
+    ]
+  },
+  "schedule": null,
+  "priorSchedule": null,
+  "selectedWeekStart": null,
+  "shiftHours": null,
+  "manifest": {
+    "availabilityFile": "EmployeeAvailabilityExport.xlsx",
+    "scheduleFile": null,
+    "priorScheduleFile": null,
+    "updatedAt": "2026-06-10T17:00:45.906Z"
+  }
+}

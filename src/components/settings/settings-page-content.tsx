@@ -18,19 +18,26 @@ import {
 import { readFileAsNamedSheets } from "@/lib/file-ingest";
 import { parseAvailabilityWorkbook } from "@/lib/parsers/availability-parser";
 import { parseScheduleSheet } from "@/lib/parsers/schedule-parser";
+import { uploadPersistedFile } from "@/lib/storage-sync";
 import type { AvailabilityData } from "@/lib/types";
 
 export function SettingsPageContent() {
   const {
+    applyPersistedState,
     setAvailability,
     setSchedule,
     clearAll,
     availability,
     schedule,
+    manifest,
   } = useAppData();
 
-  const [availabilityFile, setAvailabilityFile] = useState<string | null>(null);
-  const [scheduleFile, setScheduleFile] = useState<string | null>(null);
+  const [availabilityFile, setAvailabilityFile] = useState<string | null>(
+    manifest.availabilityFile,
+  );
+  const [scheduleFile, setScheduleFile] = useState<string | null>(
+    manifest.scheduleFile,
+  );
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingAvailabilityUpload, setPendingAvailabilityUpload] = useState<{
@@ -42,7 +49,7 @@ export function SettingsPageContent() {
     setAvailability(data);
     setAvailabilityFile(fileName);
     setSuccess(
-      `Availability loaded: ${data.employees.length} employees from all workbook tabs.`,
+      `Availability loaded: ${data.employees.length} roster rows from all workbook tabs.`,
     );
     setError(null);
   }
@@ -59,13 +66,13 @@ export function SettingsPageContent() {
         <div className="grid gap-6 lg:grid-cols-2">
           <FileDropzone
             label="Availability Ingestion"
-            description="Employee, Role, Wed–Tue availability, and shift counts from every Excel tab. Staffing Guide rows are ignored."
+            description="Employee, Role, Wed–Tue availability, and shift counts from every Excel tab. Each role tab is kept as a separate roster row. Staffing Guide rows are ignored."
             readAndParse={async (file) => {
               const sheets = await readFileAsNamedSheets(file);
               return parseAvailabilityWorkbook(sheets);
             }}
             lastUploaded={availabilityFile}
-            onSuccess={(fileName, data) => {
+            onSuccess={(fileName, data, file) => {
               const diff = computeAvailabilityDiff(availability, data);
               if (diff.needsReview) {
                 setPendingAvailabilityUpload({ fileName, data });
@@ -75,6 +82,9 @@ export function SettingsPageContent() {
               }
 
               applyAvailabilityUpload(fileName, data);
+              void uploadPersistedFile("availability", file).then((persisted) => {
+                if (persisted) applyPersistedState(persisted);
+              });
             }}
             onError={(message) => {
               setError(message);
@@ -87,13 +97,16 @@ export function SettingsPageContent() {
             description="Loads a shift report directly into Shift Report (bypasses generation). For building a new week from availability, use Prior Schedule + Generate instead."
             parse={parseScheduleSheet}
             lastUploaded={scheduleFile}
-            onSuccess={(fileName, data) => {
+            onSuccess={(fileName, data, file) => {
               setSchedule(data);
               setScheduleFile(fileName);
               setSuccess(
                 `Schedule loaded: ${data.days.filter((day) => day.mealPeriods.some((period) => period.roles.some((role) => role.shifts.length > 0))).length} active days parsed.`,
               );
               setError(null);
+              void uploadPersistedFile("schedule", file).then((persisted) => {
+                if (persisted) applyPersistedState(persisted);
+              });
             }}
             onError={(message) => {
               setError(message);
@@ -110,13 +123,18 @@ export function SettingsPageContent() {
             <p className="text-xs text-zinc-500">
               Availability:{" "}
               {availability
-                ? `${availability.employees.length} employees`
+                ? `${availability.employees.length} roster rows`
                 : "Not loaded"}
               {" · "}
               Schedule:{" "}
               {schedule
                 ? `${schedule.days.length} day blocks`
                 : "Not loaded"}
+              {" · "}
+              Repo files:{" "}
+              {[manifest.availabilityFile, manifest.scheduleFile, manifest.priorScheduleFile]
+                .filter(Boolean)
+                .join(", ") || "None"}
             </p>
           </div>
           <Button

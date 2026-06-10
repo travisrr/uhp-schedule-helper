@@ -10,7 +10,7 @@ import { readFileAsRawRows } from "@/lib/file-ingest";
 interface FileDropzoneProps<T> {
   label: string;
   description: string;
-  onSuccess: (fileName: string, data: T) => void;
+  onSuccess: (fileName: string, data: T, file: File) => void;
   onError: (message: string) => void;
   parse?: (rows: string[][]) => T;
   readAndParse?: (file: File) => Promise<T>;
@@ -37,7 +37,7 @@ export function FileDropzone<T>({
         const data = readAndParse
           ? await readAndParse(file)
           : parse!(await readFileAsRawRows(file));
-        onSuccess(file.name, data);
+        onSuccess(file.name, data, file);
       } catch (error) {
         onError(
           error instanceof Error ? error.message : "Unable to process file.",

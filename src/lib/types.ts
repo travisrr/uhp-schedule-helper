@@ -73,3 +73,14 @@ export interface AppDataState {
   /** Default start/end times applied to AM and PM shifts. */
   shiftHours: ShiftHoursSettings;
 }
+
+export interface StoredManifest {
+  availabilityFile: string | null;
+  scheduleFile: string | null;
+  priorScheduleFile: string | null;
+  updatedAt: string | null;
+}
+
+export interface PersistedAppState extends AppDataState {
+  manifest: StoredManifest;
+}

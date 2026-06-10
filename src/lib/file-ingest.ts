@@ -37,13 +37,21 @@ async function readCsvAsRawRows(file: File): Promise<RawSheet> {
   return parsed.data.map((row) => row.map(normalizeCell));
 }
 
-async function readExcelAsNamedSheets(file: File): Promise<NamedSheet[]> {
-  const buffer = await file.arrayBuffer();
+function readBufferAsNamedSheets(buffer: ArrayBuffer): NamedSheet[] {
   const workbook = XLSX.read(buffer, { type: "array" });
   return workbook.SheetNames.map((name) => ({
     name,
     rows: sheetToRawRows(workbook.Sheets[name]),
   }));
+}
+
+async function readExcelAsNamedSheets(file: File): Promise<NamedSheet[]> {
+  const buffer = await file.arrayBuffer();
+  return readBufferAsNamedSheets(buffer);
+}
+
+export function readArrayBufferAsNamedSheets(buffer: ArrayBuffer): NamedSheet[] {
+  return readBufferAsNamedSheets(buffer);
 }
 
 async function readExcelAsRawSheets(file: File): Promise<RawSheet[]> {

@@ -12,8 +12,10 @@ import {
 import type {
   AppDataState,
   AvailabilityData,
+  PersistedAppState,
   PriorSchedule,
   ScheduleData,
+  StoredManifest,
 } from "@/lib/types";
 import { normalizeScheduleAssignments } from "@/lib/schedule-management-roles";
 import {
@@ -21,6 +23,13 @@ import {
   normalizeShiftHours,
   type ShiftHoursSettings,
 } from "@/lib/shift-hours";
+import {
+  clearPersistedState,
+  fetchPersistedState,
+  hasPersistedData,
+  savePersistedStatePatch,
+  toAppDataState,
+} from "@/lib/storage-sync";
 import { getDefaultWeekStart, toISODateString } from "@/lib/week-utils";
 
 const STORAGE_KEY = "uhp-schedule-helper-data";
@@ -31,6 +40,8 @@ export type ScheduleUpdater =
   | ((previous: ScheduleData | null) => ScheduleData | null);
 
 interface AppDataContextValue extends AppDataState {
+  manifest: StoredManifest;
+  applyPersistedState: (state: PersistedAppState) => void;
   setAvailability: (data: AvailabilityData | null) => void;
   setSchedule: (data: ScheduleUpdater) => void;
   setPriorSchedule: (data: PriorSchedule | null) => void;
@@ -44,6 +55,15 @@ interface AppDataContextValue extends AppDataState {
 }
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
+
+function createEmptyManifest(): StoredManifest {
+  return {
+    availabilityFile: null,
+    scheduleFile: null,
+    priorScheduleFile: null,
+    updatedAt: null,
+  };
+}
 
 function createEmptyState(): AppDataState {
   return {
@@ -83,17 +103,53 @@ function loadStoredState(): AppDataState {
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppDataState>(createEmptyState);
+  const [manifest, setManifest] = useState<StoredManifest>(createEmptyManifest);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setState(loadStoredState());
-    setHydrated(true);
+    let cancelled = false;
+
+    async function hydrateState() {
+      const persisted = await fetchPersistedState();
+      if (cancelled) return;
+
+      if (persisted && hasPersistedData(persisted)) {
+        setState(toAppDataState(persisted));
+        setManifest(persisted.manifest);
+      } else {
+        setState(loadStoredState());
+        setManifest(createEmptyManifest());
+      }
+
+      setHydrated(true);
+    }
+
+    void hydrateState();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
+    const timeoutId = window.setTimeout(() => {
+      void savePersistedStatePatch(state);
+    }, 400);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [state, hydrated]);
+
+  const applyPersistedState = useCallback((persisted: PersistedAppState) => {
+    setState(toAppDataState(persisted));
+    setManifest(persisted.manifest);
+  }, []);
 
   const setAvailability = useCallback((availability: AvailabilityData | null) => {
     setState((prev) => ({ ...prev, availability }));
@@ -153,11 +209,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       ...createEmptyState(),
       shiftHours: prev.shiftHours,
     }));
+    setManifest(createEmptyManifest());
+    void clearPersistedState();
   }, []);
 
   const value = useMemo(
     () => ({
       ...state,
+      manifest,
+      applyPersistedState,
       setAvailability,
       setSchedule,
       setPriorSchedule,
@@ -171,6 +231,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }),
     [
       state,
+      manifest,
+      applyPersistedState,
       setAvailability,
       setSchedule,
       setPriorSchedule,
