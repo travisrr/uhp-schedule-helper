@@ -47,6 +47,25 @@ export function formatWeeklyHours(hours: number): string {
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 
+/** Stable fingerprint for React keys when shift assignments change. */
+export function scheduleAssignmentFingerprint(schedule: ScheduleData): string {
+  const parts: string[] = [];
+
+  for (const day of schedule.days) {
+    for (const period of day.mealPeriods) {
+      for (const roleBlock of period.roles) {
+        for (const shift of roleBlock.shifts) {
+          parts.push(
+            `${day.day}|${period.period}|${roleBlock.role}|${shift.employee}|${shift.timeRange}`,
+          );
+        }
+      }
+    }
+  }
+
+  return parts.join("\n");
+}
+
 export function computeEmployeeWeeklyStats(
   schedule: ScheduleData,
 ): EmployeeWeeklyStats[] {

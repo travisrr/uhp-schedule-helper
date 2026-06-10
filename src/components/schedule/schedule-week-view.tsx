@@ -239,11 +239,13 @@ function ScheduleWeekTable({
   title,
   editable,
   showWeeklyStats,
+  useLiveStats,
 }: {
   schedule: ScheduleData;
   title: string;
   editable: boolean;
   showWeeklyStats: boolean;
+  useLiveStats: boolean;
 }) {
   const orderedDays = DAYS.map((dayKey) =>
     schedule.days.find((day) => day.day === dayKey),
@@ -321,6 +323,7 @@ function ScheduleWeekTable({
         <ScheduleEmployeeStatsPanel
           className="no-print xl:w-[300px] xl:shrink-0"
           schedule={schedule}
+          useLiveSchedule={useLiveStats}
         />
       </div>
     </div>
@@ -376,6 +379,7 @@ export function ScheduleWeekView({
         title={title}
         editable={false}
         showWeeklyStats={showWeeklyStats}
+        useLiveStats={scheduleProp == null}
       />
     );
   }
@@ -390,6 +394,7 @@ export function ScheduleWeekView({
         title={title}
         editable
         showWeeklyStats={showWeeklyStats}
+        useLiveStats={scheduleProp == null}
       />
     </ScheduleShiftActionProvider>
   );

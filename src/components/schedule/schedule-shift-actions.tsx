@@ -39,6 +39,7 @@ import {
   type ShiftRef,
 } from "@/lib/schedule-mutations";
 import type { ScheduleData } from "@/lib/types";
+import type { ScheduleUpdater } from "@/context/data-context";
 import { cn } from "@/lib/utils";
 
 type ContextMenuTarget =
@@ -73,7 +74,7 @@ export function ScheduleShiftActionProvider({
   children,
 }: {
   schedule: ScheduleData;
-  onScheduleChange: (schedule: ScheduleData) => void;
+  onScheduleChange: (data: ScheduleUpdater) => void;
   children: ReactNode;
 }) {
   const [menu, setMenu] = useState<
@@ -172,35 +173,41 @@ export function ScheduleShiftActionProvider({
 
   function handleAssignSelect(candidate: EmployeeOption) {
     if (!swapTarget || swapTarget.kind !== "employee") return;
-    onScheduleChange(
-      assignShiftEmployee(
-        schedule,
-        swapTarget.ref,
-        candidate.employee,
-        shiftHours,
-      ),
+    onScheduleChange((current) =>
+      current
+        ? assignShiftEmployee(
+            current,
+            swapTarget.ref,
+            candidate.employee,
+            shiftHours,
+          )
+        : current,
     );
     setSwapTarget(null);
   }
 
   function handleSwapSelect(candidate: ShiftListing) {
     if (!swapTarget || swapTarget.kind !== "employee") return;
-    onScheduleChange(
-      swapShiftEmployees(schedule, swapTarget.ref, candidate),
+    onScheduleChange((current) =>
+      current ? swapShiftEmployees(current, swapTarget.ref, candidate) : current,
     );
     setSwapTarget(null);
   }
 
   function handleRemoveConfirm() {
     if (!removeTarget || removeTarget.kind !== "employee") return;
-    onScheduleChange(clearShiftEmployee(schedule, removeTarget.ref));
+    onScheduleChange((current) =>
+      current ? clearShiftEmployee(current, removeTarget.ref) : current,
+    );
     setRemoveTarget(null);
   }
 
   function handleAddRoleSelect(candidate: EmployeeOption) {
     if (!addRoleTarget) return;
-    onScheduleChange(
-      addShiftToRole(schedule, addRoleTarget, candidate.employee, shiftHours),
+    onScheduleChange((current) =>
+      current
+        ? addShiftToRole(current, addRoleTarget, candidate.employee, shiftHours)
+        : current,
     );
     setAddRoleTarget(null);
   }
@@ -316,12 +323,14 @@ export function ScheduleShiftActionProvider({
         }}
         onSave={(start, end) => {
           if (!timeTarget || timeTarget.kind !== "time") return;
-          onScheduleChange(
-            updateShiftTimeRange(
-              schedule,
-              timeTarget.ref,
-              formatShiftTimeRange(start, end),
-            ),
+          onScheduleChange((current) =>
+            current
+              ? updateShiftTimeRange(
+                  current,
+                  timeTarget.ref,
+                  formatShiftTimeRange(start, end),
+                )
+              : current,
           );
           setTimeTarget(null);
         }}

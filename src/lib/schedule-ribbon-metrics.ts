@@ -38,8 +38,9 @@ export function computeScheduleRibbonMetrics(
   return {
     totalShiftSlots,
     assignedShifts,
-    totalHours: hasComputedHours
-      ? computedHours
-      : schedule.metrics.totalHours,
+    totalHours:
+      assignedShifts > 0 || hasComputedHours
+        ? computedHours
+        : schedule.metrics.totalHours,
   };
 }

@@ -25,9 +25,14 @@ import { getDefaultWeekStart, toISODateString } from "@/lib/week-utils";
 
 const STORAGE_KEY = "uhp-schedule-helper-data";
 
+export type ScheduleUpdater =
+  | ScheduleData
+  | null
+  | ((previous: ScheduleData | null) => ScheduleData | null);
+
 interface AppDataContextValue extends AppDataState {
   setAvailability: (data: AvailabilityData | null) => void;
-  setSchedule: (data: ScheduleData | null) => void;
+  setSchedule: (data: ScheduleUpdater) => void;
   setPriorSchedule: (data: PriorSchedule | null) => void;
   setSelectedWeekStart: (weekStart: string | null) => void;
   setShiftHours: (shiftHours: ShiftHoursSettings) => void;
@@ -94,11 +99,18 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, availability }));
   }, []);
 
-  const setSchedule = useCallback((schedule: ScheduleData | null) => {
-    setState((prev) => ({
-      ...prev,
-      schedule: schedule ? normalizeScheduleAssignments(schedule) : null,
-    }));
+  const setSchedule = useCallback((schedule: ScheduleUpdater) => {
+    setState((prev) => {
+      const nextSchedule =
+        typeof schedule === "function" ? schedule(prev.schedule) : schedule;
+
+      return {
+        ...prev,
+        schedule: nextSchedule
+          ? normalizeScheduleAssignments(nextSchedule)
+          : null,
+      };
+    });
   }, []);
 
   const setPriorSchedule = useCallback((priorSchedule: PriorSchedule | null) => {
