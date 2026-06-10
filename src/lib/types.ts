@@ -63,11 +63,32 @@ export interface PriorSchedule {
   importedAt: string;
 }
 
+export interface ServerMetricRow {
+  employeeName: string;
+  netSales: number | null;
+  grossSales: number | null;
+  totalGuests: number | null;
+  netSalesPerGuest: number | null;
+  avgCheckSize: number | null;
+  avgTurnTimeMin: number | null;
+  totalLaborHours: number | null;
+  netSalesPerLaborHour: number | null;
+  voidsAndDiscounts: number | null;
+}
+
+export interface ServerMetricsData {
+  rows: ServerMetricRow[];
+  fileName: string;
+  importedAt: string;
+}
+
 export interface AppDataState {
   availability: AvailabilityData | null;
   schedule: ScheduleData | null;
   /** Imported prior-week schedule used as a template when generating new schedules. */
   priorSchedule: PriorSchedule | null;
+  /** Toast POS server performance export for shift-reward decisions. */
+  serverMetrics: ServerMetricsData | null;
   /** ISO date (YYYY-MM-DD) for the selected Wed–Tue scheduling week. */
   selectedWeekStart: string | null;
   /** Default start/end times applied to AM and PM shifts. */
@@ -78,6 +99,7 @@ export interface StoredManifest {
   availabilityFile: string | null;
   scheduleFile: string | null;
   priorScheduleFile: string | null;
+  serverMetricsFile: string | null;
   updatedAt: string | null;
 }
 

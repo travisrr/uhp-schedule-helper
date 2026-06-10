@@ -6,13 +6,20 @@ import {
   persistAvailabilityUpload,
   persistPriorScheduleUpload,
   persistScheduleUpload,
+  persistServerMetricsUpload,
 } from "@/lib/server/app-storage";
+import { parseServerMetricsSheet } from "@/lib/parsers/server-metrics-parser";
 import type { PriorSchedule } from "@/lib/types";
 
-type UploadKind = "availability" | "schedule" | "prior-schedule";
+type UploadKind = "availability" | "schedule" | "prior-schedule" | "server-metrics";
 
 function getUploadKind(value: FormDataEntryValue | null): UploadKind | null {
-  if (value === "availability" || value === "schedule" || value === "prior-schedule") {
+  if (
+    value === "availability" ||
+    value === "schedule" ||
+    value === "prior-schedule" ||
+    value === "server-metrics"
+  ) {
     return value;
   }
   return null;
@@ -48,6 +55,15 @@ export async function POST(request: Request) {
       buffer.byteOffset,
       buffer.byteOffset + buffer.byteLength,
     ))[0]?.rows ?? [];
+
+    if (kind === "server-metrics") {
+      const data = parseServerMetricsSheet(rows);
+      const state = await persistServerMetricsUpload(file.name, buffer, {
+        ...data,
+        fileName: file.name,
+      });
+      return NextResponse.json(state);
+    }
 
     const schedule = parseScheduleSheet(rows);
 

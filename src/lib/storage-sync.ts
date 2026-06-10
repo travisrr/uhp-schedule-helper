@@ -33,7 +33,7 @@ export async function clearPersistedState(): Promise<void> {
 }
 
 export async function uploadPersistedFile(
-  kind: "availability" | "schedule" | "prior-schedule",
+  kind: "availability" | "schedule" | "prior-schedule" | "server-metrics",
   file: File,
 ): Promise<PersistedAppState | null> {
   try {
@@ -58,9 +58,11 @@ export function hasPersistedData(state: PersistedAppState): boolean {
     state.availability ||
       state.schedule ||
       state.priorSchedule ||
+      state.serverMetrics ||
       state.manifest.availabilityFile ||
       state.manifest.scheduleFile ||
-      state.manifest.priorScheduleFile,
+      state.manifest.priorScheduleFile ||
+      state.manifest.serverMetricsFile,
   );
 }
 
@@ -69,6 +71,7 @@ export function toAppDataState(state: PersistedAppState): AppDataState {
     availability: state.availability,
     schedule: state.schedule,
     priorSchedule: state.priorSchedule,
+    serverMetrics: state.serverMetrics,
     selectedWeekStart: state.selectedWeekStart,
     shiftHours: state.shiftHours,
   };

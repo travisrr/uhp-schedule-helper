@@ -17,6 +17,7 @@ import type {
   PersistedAppState,
   PriorSchedule,
   ScheduleData,
+  ServerMetricsData,
   StoredManifest,
 } from "@/lib/types";
 import type { DayKey } from "@/lib/utils";
@@ -50,6 +51,7 @@ interface AppDataContextValue extends AppDataState {
   setPriorSchedule: (data: PriorSchedule | null) => void;
   setSelectedWeekStart: (weekStart: string | null) => void;
   setShiftHours: (shiftHours: ShiftHoursSettings) => void;
+  setServerMetrics: (data: ServerMetricsData | null) => void;
   addAvailabilityEmployee: (employee: EmployeeAvailability) => void;
   removeAvailabilityEmployee: (index: number) => void;
   updateAvailabilityStatus: (
@@ -60,6 +62,7 @@ interface AppDataContextValue extends AppDataState {
   clearAvailability: () => void;
   clearSchedule: () => void;
   clearPriorSchedule: () => void;
+  clearServerMetrics: () => void;
   clearAll: () => void;
 }
 
@@ -70,6 +73,7 @@ function createEmptyManifest(): StoredManifest {
     availabilityFile: null,
     scheduleFile: null,
     priorScheduleFile: null,
+    serverMetricsFile: null,
     updatedAt: null,
   };
 }
@@ -79,6 +83,7 @@ function createEmptyState(): AppDataState {
     availability: null,
     schedule: null,
     priorSchedule: null,
+    serverMetrics: null,
     selectedWeekStart: toISODateString(getDefaultWeekStart()),
     shiftHours: createDefaultShiftHours(),
   };
@@ -101,6 +106,7 @@ function loadStoredState(): AppDataState {
       availability: parsed.availability ?? null,
       schedule,
       priorSchedule: parsed.priorSchedule ?? null,
+      serverMetrics: parsed.serverMetrics ?? null,
       selectedWeekStart:
         parsed.selectedWeekStart ?? toISODateString(getDefaultWeekStart()),
       shiftHours: normalizeShiftHours(parsed.shiftHours),
@@ -190,6 +196,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, shiftHours }));
   }, []);
 
+  const setServerMetrics = useCallback((serverMetrics: ServerMetricsData | null) => {
+    setState((prev) => ({ ...prev, serverMetrics }));
+  }, []);
+
   const addAvailabilityEmployee = useCallback((employee: EmployeeAvailability) => {
     setState((prev) => ({
       ...prev,
@@ -250,6 +260,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, priorSchedule: null }));
   }, []);
 
+  const clearServerMetrics = useCallback(() => {
+    setState((prev) => ({ ...prev, serverMetrics: null }));
+    setManifest((prev) => ({ ...prev, serverMetricsFile: null }));
+  }, []);
+
   const clearAll = useCallback(() => {
     setState((prev) => ({
       ...createEmptyState(),
@@ -269,12 +284,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setPriorSchedule,
       setSelectedWeekStart,
       setShiftHours,
+      setServerMetrics,
       addAvailabilityEmployee,
       removeAvailabilityEmployee,
       updateAvailabilityStatus,
       clearAvailability,
       clearSchedule,
       clearPriorSchedule,
+      clearServerMetrics,
       clearAll,
     }),
     [
@@ -286,12 +303,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setPriorSchedule,
       setSelectedWeekStart,
       setShiftHours,
+      setServerMetrics,
       addAvailabilityEmployee,
       removeAvailabilityEmployee,
       updateAvailabilityStatus,
       clearAvailability,
       clearSchedule,
       clearPriorSchedule,
+      clearServerMetrics,
       clearAll,
     ],
   );

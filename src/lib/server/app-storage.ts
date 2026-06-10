@@ -12,6 +12,7 @@ import type {
   PersistedAppState,
   PriorSchedule,
   ScheduleData,
+  ServerMetricsData,
   StoredManifest,
 } from "@/lib/types";
 import { getDefaultWeekStart, toISODateString } from "@/lib/week-utils";
@@ -26,6 +27,7 @@ function createEmptyManifest(): StoredManifest {
     availabilityFile: null,
     scheduleFile: null,
     priorScheduleFile: null,
+    serverMetricsFile: null,
     updatedAt: null,
   };
 }
@@ -35,6 +37,7 @@ function createEmptyPersistedState(): PersistedAppState {
     availability: null,
     schedule: null,
     priorSchedule: null,
+    serverMetrics: null,
     selectedWeekStart: toISODateString(getDefaultWeekStart()),
     shiftHours: createDefaultShiftHours(),
     manifest: createEmptyManifest(),
@@ -56,6 +59,7 @@ function normalizePersistedState(
     availability: parsed.availability ?? null,
     schedule,
     priorSchedule: parsed.priorSchedule ?? null,
+    serverMetrics: parsed.serverMetrics ?? null,
     selectedWeekStart:
       parsed.selectedWeekStart ?? toISODateString(getDefaultWeekStart()),
     shiftHours: normalizeShiftHours(parsed.shiftHours),
@@ -160,6 +164,21 @@ export async function persistPriorScheduleUpload(
     priorSchedule,
     manifest: {
       priorScheduleFile: savedFileName,
+    },
+  });
+}
+
+export async function persistServerMetricsUpload(
+  fileName: string,
+  buffer: Buffer,
+  data: ServerMetricsData,
+): Promise<PersistedAppState> {
+  const savedFileName = await saveUploadedFile(fileName, buffer);
+
+  return writePersistedState({
+    serverMetrics: data,
+    manifest: {
+      serverMetricsFile: savedFileName,
     },
   });
 }

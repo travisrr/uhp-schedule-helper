@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   UserPlus,
   Settings2,
+  BarChart3,
 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { cn, DAYS } from "@/lib/utils";
@@ -54,6 +55,11 @@ const NAV_ITEMS = [
     href: "/shift-hours",
     label: "Shift Hours",
     icon: Clock3,
+  },
+  {
+    href: "/server-metrics",
+    label: "Server Metrics",
+    icon: BarChart3,
   },
   {
     href: "/settings",

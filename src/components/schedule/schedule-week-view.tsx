@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useAppData } from "@/context/data-context";
 import { ScheduleEmployeeStatsPanel } from "@/components/schedule/schedule-employee-stats-panel";
 import { ScheduleExportActions } from "@/components/schedule/schedule-export-actions";
@@ -11,6 +12,7 @@ import type { ShiftRef } from "@/lib/schedule-mutations";
 import { ensureMealPeriodManagementSlot } from "@/lib/schedule-management-roles";
 import { cn, DAY_LABELS, DAYS, type DayKey } from "@/lib/utils";
 import type { MealPeriodBlock, ScheduleData } from "@/lib/types";
+import { buildDayDateLabels, parseISODateString } from "@/lib/week-utils";
 
 type RowItem =
   | { kind: "role"; role: string; day: DayKey; period: "AM" | "PM" }
@@ -265,10 +267,10 @@ function ScheduleWeekTable({
       id="schedule-print-root"
       className={cn(
         "overflow-x-auto rounded border border-black bg-white",
-        showWeeklyStats ? "min-w-0 flex-1" : undefined,
+        showWeeklyStats ? "min-w-0 flex-[1_1_920px]" : undefined,
       )}
     >
-      <table className="w-full min-w-[1000px] table-fixed border-collapse text-sm">
+      <table className="w-full min-w-[920px] table-fixed border-collapse text-sm">
         {SCHEDULE_COLGROUP}
         <tbody>
           <tr>
@@ -327,16 +329,36 @@ function ScheduleWeekTable({
   return (
     <div className="space-y-3">
       <ScheduleExportActions weekStartDate={schedule.weekStartDate} />
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
+      <div className="flex flex-wrap items-start gap-4">
         {scheduleTable}
         <ScheduleEmployeeStatsPanel
-          className="no-print xl:w-[300px] xl:shrink-0"
+          className="no-print w-full min-w-[260px] flex-[1_1_280px] min-[1500px]:sticky min-[1500px]:top-4 min-[1500px]:max-w-[320px]"
           schedule={schedule}
           useLiveSchedule={useLiveStats}
         />
       </div>
     </div>
   );
+}
+
+function applyWeekDateLabels(
+  schedule: ScheduleData | null | undefined,
+  weekStartDate?: string | null,
+): ScheduleData | null | undefined {
+  if (!weekStartDate) return schedule;
+  if (!schedule) return schedule;
+
+  const labels = buildDayDateLabels(parseISODateString(weekStartDate));
+  const days = schedule.days.map((day) => ({
+    ...day,
+    dateLabel: labels[day.day],
+  }));
+
+  return {
+    ...schedule,
+    weekStartDate,
+    days,
+  };
 }
 
 interface ScheduleWeekViewProps {
@@ -355,8 +377,19 @@ export function ScheduleWeekView({
   editable: editableProp,
   showWeeklyStats = true,
 }: ScheduleWeekViewProps = {}) {
-  const { schedule: contextSchedule, setSchedule } = useAppData();
-  const schedule = scheduleProp ?? contextSchedule;
+  const {
+    schedule: contextSchedule,
+    selectedWeekStart,
+    setSchedule,
+  } = useAppData();
+  const sourceSchedule = scheduleProp ?? contextSchedule;
+  const schedule = useMemo(
+    () =>
+      scheduleProp == null
+        ? applyWeekDateLabels(sourceSchedule, selectedWeekStart)
+        : sourceSchedule,
+    [scheduleProp, selectedWeekStart, sourceSchedule],
+  );
   const editable = editableProp ?? scheduleProp == null;
 
   if (!schedule) {

@@ -51,11 +51,11 @@ export function ScheduleEmployeeStatsPanel({
   return (
     <div
       className={cn(
-        "overflow-x-auto rounded border border-black bg-white lg:sticky lg:top-4",
+        "overflow-x-auto rounded border border-black bg-white",
         className,
       )}
     >
-      <table className="w-full min-w-[280px] table-fixed border-collapse text-sm">
+      <table className="w-full min-w-[260px] table-fixed border-collapse text-sm">
         <colgroup>
           <col style={{ width: "42%" }} />
           <col style={{ width: "18%" }} />
