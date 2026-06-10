@@ -4,7 +4,10 @@ import {
   isFohManagementRole,
   normalizeScheduleAssignments,
 } from "@/lib/schedule-management-roles";
-import type { ShiftHoursSettings } from "@/lib/shift-hours";
+import {
+  timeRangeForPeriod,
+  type ShiftHoursSettings,
+} from "@/lib/shift-hours";
 import {
   formatShiftTimeRange,
   isValidTimeToken,
@@ -277,6 +280,36 @@ export function swapShiftEmployees(
               return { ...shift, employee: sourceEmployee };
             }
             return shift;
+          }),
+        })),
+      })),
+    })),
+  });
+}
+
+export function applyShiftHoursToSchedule(
+  schedule: ScheduleData,
+  shiftHours: ShiftHoursSettings,
+): ScheduleData {
+  return normalizeScheduleAssignments({
+    ...schedule,
+    days: schedule.days.map((day) => ({
+      ...day,
+      mealPeriods: day.mealPeriods.map((periodBlock) => ({
+        ...periodBlock,
+        roles: periodBlock.roles.map((roleBlock) => ({
+          ...roleBlock,
+          shifts: roleBlock.shifts.map((shift) => {
+            if (!shift.employee.trim()) {
+              return isFohManagementRole(roleBlock.role)
+                ? { ...shift, timeRange: "" }
+                : shift;
+            }
+
+            return {
+              ...shift,
+              timeRange: timeRangeForPeriod(periodBlock.period, shiftHours),
+            };
           }),
         })),
       })),

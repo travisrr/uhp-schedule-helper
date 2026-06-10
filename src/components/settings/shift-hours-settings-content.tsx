@@ -14,6 +14,7 @@ import {
   type PeriodHours,
   type ShiftHoursSettings,
 } from "@/lib/shift-hours";
+import { applyShiftHoursToSchedule } from "@/lib/schedule-mutations";
 import { isValidTimeToken } from "@/lib/time-format";
 import { cn } from "@/lib/utils";
 
@@ -85,7 +86,7 @@ function timeInputClassName(valid: boolean): string {
 }
 
 export function ShiftHoursSettingsContent() {
-  const { shiftHours, setShiftHours } = useAppData();
+  const { schedule, shiftHours, setSchedule, setShiftHours } = useAppData();
   const [draft, setDraft] = useState<ShiftHoursSettings>(shiftHours);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
@@ -113,6 +114,18 @@ export function ShiftHoursSettingsContent() {
     setStatusMessage("Reset to default shift hours.");
   }
 
+  function handleApplyToSchedule() {
+    if (!canSave) return;
+    if (!schedule) {
+      setStatusMessage("No schedule loaded. Generate or import a schedule first.");
+      return;
+    }
+
+    setShiftHours(draft);
+    setSchedule(applyShiftHoursToSchedule(schedule, draft));
+    setStatusMessage("Shift hours saved and applied to the current schedule.");
+  }
+
   return (
     <AppShell
       title="Shift Hours"
@@ -135,13 +148,22 @@ export function ShiftHoursSettingsContent() {
         </div>
 
         <p className="text-sm text-zinc-500">
-          Use 12-hour times like 10:30 AM or 4:00 PM. These defaults apply when a
-          shift has no time assigned yet.
+          Use 12-hour times like 10:30 AM or 4:00 PM. Saved defaults apply when a
+          shift has no time assigned yet. Use Apply to schedule to update times on
+          all assigned shifts in the current schedule.
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
           <Button type="button" onClick={handleSave} disabled={!canSave || !hasChanges}>
             Save shift hours
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleApplyToSchedule}
+            disabled={!canSave || !schedule}
+          >
+            Apply to schedule
           </Button>
           <Button type="button" variant="outline" onClick={handleReset}>
             Reset to defaults
