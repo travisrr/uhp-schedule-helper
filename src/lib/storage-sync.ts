@@ -1,4 +1,114 @@
-import type { AppDataState, PersistedAppState } from "@/lib/types";
+import { normalizeScheduleAssignments } from "@/lib/schedule-management-roles";
+import {
+  createDefaultShiftHours,
+  normalizeShiftHours,
+} from "@/lib/shift-hours";
+import type {
+  AppDataState,
+  PersistedAppState,
+  StoredManifest,
+} from "@/lib/types";
+import { getDefaultWeekStart, toISODateString } from "@/lib/week-utils";
+
+export const LOCAL_STORAGE_KEY = "uhp-schedule-helper-data";
+
+export interface LocalStorageEnvelope {
+  version: 1;
+  updatedAt: string;
+  manifest: StoredManifest;
+  state: AppDataState;
+}
+
+function createEmptyManifest(): StoredManifest {
+  return {
+    availabilityFile: null,
+    scheduleFile: null,
+    priorScheduleFile: null,
+    serverMetricsFile: null,
+    updatedAt: null,
+  };
+}
+
+function createEmptyState(): AppDataState {
+  return {
+    availability: null,
+    schedule: null,
+    priorSchedule: null,
+    serverMetrics: null,
+    selectedWeekStart: toISODateString(getDefaultWeekStart()),
+    shiftHours: createDefaultShiftHours(),
+  };
+}
+
+function normalizeAppDataState(parsed: Partial<AppDataState>): AppDataState {
+  const schedule = parsed.schedule
+    ? normalizeScheduleAssignments(parsed.schedule)
+    : null;
+
+  return {
+    availability: parsed.availability ?? null,
+    schedule,
+    priorSchedule: parsed.priorSchedule ?? null,
+    serverMetrics: parsed.serverMetrics ?? null,
+    selectedWeekStart:
+      parsed.selectedWeekStart ?? toISODateString(getDefaultWeekStart()),
+    shiftHours: normalizeShiftHours(parsed.shiftHours),
+  };
+}
+
+function parseTimestamp(value: string | null | undefined): number {
+  if (!value) return 0;
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function pickByRecency<T>(
+  serverValue: T,
+  localValue: T,
+  serverTime: number,
+  localTime: number,
+): T {
+  if (localTime >= serverTime) return localValue;
+  return serverValue;
+}
+
+function pickNullableField<T>(
+  serverValue: T | null,
+  localValue: T | null,
+  serverTime: number,
+  localTime: number,
+): T | null {
+  if (serverValue && !localValue) return serverValue;
+  if (localValue && !serverValue) return localValue;
+  if (!serverValue && !localValue) return null;
+  return pickByRecency(serverValue, localValue, serverTime, localTime);
+}
+
+function mergeManifest(
+  serverManifest: StoredManifest,
+  localManifest: StoredManifest,
+  serverTime: number,
+  localTime: number,
+): StoredManifest {
+  const preferred =
+    localTime >= serverTime ? localManifest : serverManifest;
+  const fallback =
+    localTime >= serverTime ? serverManifest : localManifest;
+
+  return {
+    availabilityFile:
+      preferred.availabilityFile ?? fallback.availabilityFile,
+    scheduleFile: preferred.scheduleFile ?? fallback.scheduleFile,
+    priorScheduleFile:
+      preferred.priorScheduleFile ?? fallback.priorScheduleFile,
+    serverMetricsFile:
+      preferred.serverMetricsFile ?? fallback.serverMetricsFile,
+    updatedAt:
+      preferred.updatedAt ??
+      fallback.updatedAt ??
+      new Date(Math.max(serverTime, localTime)).toISOString(),
+  };
+}
 
 export async function fetchPersistedState(): Promise<PersistedAppState | null> {
   try {
@@ -18,6 +128,7 @@ export async function savePersistedStatePatch(
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
+      keepalive: true,
     });
   } catch {
     // Repo storage is best-effort; localStorage remains the offline fallback.
@@ -66,13 +177,138 @@ export function hasPersistedData(state: PersistedAppState): boolean {
   );
 }
 
+export function hasLocalData(envelope: LocalStorageEnvelope): boolean {
+  return Boolean(
+    envelope.state.availability ||
+      envelope.state.schedule ||
+      envelope.state.priorSchedule ||
+      envelope.state.serverMetrics ||
+      envelope.manifest.availabilityFile ||
+      envelope.manifest.scheduleFile ||
+      envelope.manifest.priorScheduleFile ||
+      envelope.manifest.serverMetricsFile,
+  );
+}
+
 export function toAppDataState(state: PersistedAppState): AppDataState {
+  return normalizeAppDataState(state);
+}
+
+export function loadLocalSnapshot(): LocalStorageEnvelope | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<LocalStorageEnvelope> &
+      Partial<AppDataState>;
+
+    if (parsed.version === 1 && parsed.state && parsed.updatedAt) {
+      return {
+        version: 1,
+        updatedAt: parsed.updatedAt,
+        manifest: {
+          ...createEmptyManifest(),
+          ...parsed.manifest,
+        },
+        state: normalizeAppDataState(parsed.state),
+      };
+    }
+
+    // Legacy format: raw AppDataState without envelope metadata.
+    return {
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      manifest: createEmptyManifest(),
+      state: normalizeAppDataState(parsed),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveLocalSnapshot(
+  state: AppDataState,
+  manifest: StoredManifest,
+): void {
+  if (typeof window === "undefined") return;
+
+  const envelope: LocalStorageEnvelope = {
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    manifest: {
+      ...manifest,
+      updatedAt: new Date().toISOString(),
+    },
+    state,
+  };
+
+  window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(envelope));
+}
+
+export function mergeHydratedState(
+  server: PersistedAppState | null,
+  local: LocalStorageEnvelope | null,
+): PersistedAppState {
+  const empty: PersistedAppState = {
+    ...createEmptyState(),
+    manifest: createEmptyManifest(),
+  };
+
+  const serverHasData = server ? hasPersistedData(server) : false;
+  const localHasData = local ? hasLocalData(local) : false;
+
+  if (!serverHasData && !localHasData) return empty;
+  if (!serverHasData && local) {
+    return {
+      ...local.state,
+      manifest: local.manifest,
+    };
+  }
+  if (serverHasData && server && !localHasData) return server;
+  if (!server || !local) return empty;
+
+  const serverTime = parseTimestamp(server.manifest.updatedAt);
+  const localTime = parseTimestamp(local.updatedAt);
+
   return {
-    availability: state.availability,
-    schedule: state.schedule,
-    priorSchedule: state.priorSchedule,
-    serverMetrics: state.serverMetrics,
-    selectedWeekStart: state.selectedWeekStart,
-    shiftHours: state.shiftHours,
+    availability: pickNullableField(
+      server.availability,
+      local.state.availability,
+      serverTime,
+      localTime,
+    ),
+    schedule: pickNullableField(
+      server.schedule,
+      local.state.schedule,
+      serverTime,
+      localTime,
+    ),
+    priorSchedule: pickNullableField(
+      server.priorSchedule,
+      local.state.priorSchedule,
+      serverTime,
+      localTime,
+    ),
+    serverMetrics: pickNullableField(
+      server.serverMetrics,
+      local.state.serverMetrics,
+      serverTime,
+      localTime,
+    ),
+    selectedWeekStart: pickByRecency(
+      server.selectedWeekStart,
+      local.state.selectedWeekStart,
+      serverTime,
+      localTime,
+    ),
+    shiftHours: pickByRecency(
+      server.shiftHours,
+      local.state.shiftHours,
+      serverTime,
+      localTime,
+    ),
+    manifest: mergeManifest(server.manifest, local.manifest, serverTime, localTime),
   };
 }

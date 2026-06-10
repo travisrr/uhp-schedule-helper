@@ -66,9 +66,21 @@ function toStatusOption(status: string): AvailabilityStatusOption {
   return "OFF";
 }
 
+function DataLoadingPlaceholder() {
+  return (
+    <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-100/50 dark:border-zinc-800 dark:bg-zinc-950/50">
+      <p className="text-sm text-zinc-500">Loading saved data…</p>
+    </div>
+  );
+}
+
 export function AvailabilityMatrix() {
-  const { availability, removeAvailabilityEmployee, updateAvailabilityStatus } =
-    useAppData();
+  const {
+    availability,
+    hydrated,
+    removeAvailabilityEmployee,
+    updateAvailabilityStatus,
+  } = useAppData();
   const [menu, setMenu] = useState<ContextMenuTarget | null>(null);
 
   useEffect(() => {
@@ -94,6 +106,10 @@ export function AvailabilityMatrix() {
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [menu]);
+
+  if (!hydrated) {
+    return <DataLoadingPlaceholder />;
+  }
 
   if (!availability || availability.employees.length === 0) {
     return (

@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -24,19 +25,18 @@ import type { DayKey } from "@/lib/utils";
 import { normalizeScheduleAssignments } from "@/lib/schedule-management-roles";
 import {
   createDefaultShiftHours,
-  normalizeShiftHours,
   type ShiftHoursSettings,
 } from "@/lib/shift-hours";
 import {
   clearPersistedState,
   fetchPersistedState,
-  hasPersistedData,
+  loadLocalSnapshot,
+  mergeHydratedState,
+  saveLocalSnapshot,
   savePersistedStatePatch,
   toAppDataState,
 } from "@/lib/storage-sync";
 import { getDefaultWeekStart, toISODateString } from "@/lib/week-utils";
-
-const STORAGE_KEY = "uhp-schedule-helper-data";
 
 export type ScheduleUpdater =
   | ScheduleData
@@ -45,6 +45,7 @@ export type ScheduleUpdater =
 
 interface AppDataContextValue extends AppDataState {
   manifest: StoredManifest;
+  hydrated: boolean;
   applyPersistedState: (state: PersistedAppState) => void;
   setAvailability: (data: AvailabilityData | null) => void;
   setSchedule: (data: ScheduleUpdater) => void;
@@ -89,53 +90,26 @@ function createEmptyState(): AppDataState {
   };
 }
 
-function loadStoredState(): AppDataState {
-  if (typeof window === "undefined") {
-    return createEmptyState();
-  }
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return createEmptyState();
-    const parsed = JSON.parse(raw) as Partial<AppDataState>;
-    const schedule = parsed.schedule
-      ? normalizeScheduleAssignments(parsed.schedule)
-      : null;
-
-    return {
-      availability: parsed.availability ?? null,
-      schedule,
-      priorSchedule: parsed.priorSchedule ?? null,
-      serverMetrics: parsed.serverMetrics ?? null,
-      selectedWeekStart:
-        parsed.selectedWeekStart ?? toISODateString(getDefaultWeekStart()),
-      shiftHours: normalizeShiftHours(parsed.shiftHours),
-    };
-  } catch {
-    return createEmptyState();
-  }
-}
-
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppDataState>(createEmptyState);
   const [manifest, setManifest] = useState<StoredManifest>(createEmptyManifest);
   const [hydrated, setHydrated] = useState(false);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   useEffect(() => {
     let cancelled = false;
 
     async function hydrateState() {
-      const persisted = await fetchPersistedState();
+      const [server, local] = await Promise.all([
+        fetchPersistedState(),
+        Promise.resolve(loadLocalSnapshot()),
+      ]);
       if (cancelled) return;
 
-      if (persisted && hasPersistedData(persisted)) {
-        setState(toAppDataState(persisted));
-        setManifest(persisted.manifest);
-      } else {
-        setState(loadStoredState());
-        setManifest(createEmptyManifest());
-      }
-
+      const merged = mergeHydratedState(server, local);
+      setState(toAppDataState(merged));
+      setManifest(merged.manifest);
       setHydrated(true);
     }
 
@@ -148,18 +122,29 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state, hydrated]);
+    saveLocalSnapshot(state, manifest);
+  }, [state, manifest, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
 
     const timeoutId = window.setTimeout(() => {
       void savePersistedStatePatch(state);
-    }, 400);
+    }, 100);
 
     return () => window.clearTimeout(timeoutId);
   }, [state, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
+    function flushToServer() {
+      void savePersistedStatePatch(stateRef.current);
+    }
+
+    window.addEventListener("pagehide", flushToServer);
+    return () => window.removeEventListener("pagehide", flushToServer);
+  }, [hydrated]);
 
   const applyPersistedState = useCallback((persisted: PersistedAppState) => {
     setState(toAppDataState(persisted));
@@ -278,6 +263,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     () => ({
       ...state,
       manifest,
+      hydrated,
       applyPersistedState,
       setAvailability,
       setSchedule,
@@ -297,6 +283,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     [
       state,
       manifest,
+      hydrated,
       applyPersistedState,
       setAvailability,
       setSchedule,
