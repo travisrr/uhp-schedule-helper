@@ -117,10 +117,20 @@ export function ScheduleShiftActionProvider({
     };
   }, [menu]);
 
+  const assignShiftContext = useMemo(() => {
+    if (addRoleTarget) {
+      return { day: addRoleTarget.day, period: addRoleTarget.period };
+    }
+    if (swapTarget?.kind === "employee" && isAssigning) {
+      return { day: swapTarget.ref.day, period: swapTarget.ref.period };
+    }
+    return null;
+  }, [addRoleTarget, isAssigning, swapTarget]);
+
   const assignCandidates = useMemo(() => {
-    if (!isAssigning && !addRoleTarget) return [];
-    return listAllEmployees(availability, schedule);
-  }, [addRoleTarget, availability, isAssigning, schedule]);
+    if (!assignShiftContext) return [];
+    return listAllEmployees(availability, schedule, assignShiftContext);
+  }, [assignShiftContext, availability, schedule]);
 
   const swapCandidates = useMemo(() => {
     if (!swapTarget || swapTarget.kind !== "employee" || isAssigning) return [];
@@ -134,6 +144,11 @@ export function ScheduleShiftActionProvider({
     if (!timeTarget || timeTarget.kind !== "time") return null;
     return parseShiftTimeRange(timeTarget.timeRange);
   }, [timeTarget]);
+
+  const standardPeriodHours = useMemo(() => {
+    if (!timeTarget || timeTarget.kind !== "time") return shiftHours.am;
+    return shiftHours[timeTarget.ref.period === "AM" ? "am" : "pm"];
+  }, [shiftHours, timeTarget]);
 
   const handlers = useMemo<ScheduleShiftActionHandlers>(
     () => ({
@@ -344,10 +359,12 @@ export function ScheduleShiftActionProvider({
         open={timeTarget?.kind === "time"}
         initialStart={parsedTimeRange?.start ?? ""}
         initialEnd={parsedTimeRange?.end ?? ""}
+        standardStart={standardPeriodHours.start}
+        standardEnd={standardPeriodHours.end}
         onOpenChange={(open) => {
           if (!open) setTimeTarget(null);
         }}
-        onSave={(start, end) => {
+        onSave={(start, end, timeOverride) => {
           if (!timeTarget || timeTarget.kind !== "time") return;
           onScheduleChange((current) =>
             current
@@ -355,6 +372,7 @@ export function ScheduleShiftActionProvider({
                   current,
                   timeTarget.ref,
                   formatShiftTimeRange(start, end),
+                  { timeOverride },
                 )
               : current,
           );
@@ -443,9 +461,9 @@ function EmployeePickerDialog({
             </DialogTitle>
             <DialogDescription>
               {mode === "add"
-                ? `Choose an employee to add to ${roleName || "this role"}.`
+                ? `Choose an employee to add to ${roleName || "this role"}. Names in red are outside their availability for this shift, but you can still select them.`
                 : isAssigning
-                  ? "Choose an employee to assign to this shift."
+                  ? "Choose an employee to assign to this shift. Names in red are outside their availability, but you can still select them."
                   : `Choose another shift on the same day and meal period to swap with ${sourceEmployee || "this employee"}.`}
             </DialogDescription>
           </div>
@@ -460,23 +478,46 @@ function EmployeePickerDialog({
               </p>
             ) : (
               <div className="max-h-[min(24rem,60vh)] space-y-2 overflow-y-auto">
-                {assignCandidates.map((candidate) => (
-                  <button
-                    key={candidate.employee}
-                    type="button"
-                    className="flex w-full items-center justify-between gap-3 rounded-md border border-zinc-200 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
-                    onClick={() => onAssign(candidate)}
-                  >
-                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                      {candidate.employee}
-                    </span>
-                    {candidate.role ? (
-                      <span className="text-xs text-zinc-500">
-                        {candidate.role}
+                {assignCandidates.map((candidate) => {
+                  const outsideAvailability = candidate.availableForShift === false;
+
+                  return (
+                    <button
+                      key={candidate.employee}
+                      type="button"
+                      className={cn(
+                        "flex w-full items-center justify-between gap-3 rounded-md border px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900",
+                        outsideAvailability
+                          ? "border-red-200 hover:bg-red-50 dark:border-red-900/50 dark:hover:bg-red-950/30"
+                          : "border-zinc-200 dark:border-zinc-800",
+                      )}
+                      onClick={() => onAssign(candidate)}
+                    >
+                      <span
+                        className={cn(
+                          "font-medium",
+                          outsideAvailability
+                            ? "text-red-700 dark:text-red-400"
+                            : "text-zinc-900 dark:text-zinc-100",
+                        )}
+                      >
+                        {candidate.employee}
                       </span>
-                    ) : null}
-                  </button>
-                ))}
+                      <span
+                        className={cn(
+                          "text-xs",
+                          outsideAvailability
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-zinc-500",
+                        )}
+                      >
+                        {outsideAvailability
+                          ? "Outside availability"
+                          : candidate.role || null}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             )
           ) : swapCandidates.length === 0 ? (
@@ -518,14 +559,18 @@ function AdjustShiftTimeDialog({
   open,
   initialStart,
   initialEnd,
+  standardStart,
+  standardEnd,
   onOpenChange,
   onSave,
 }: {
   open: boolean;
   initialStart: string;
   initialEnd: string;
+  standardStart: string;
+  standardEnd: string;
   onOpenChange: (open: boolean) => void;
-  onSave: (start: string, end: string) => void;
+  onSave: (start: string, end: string, timeOverride: boolean) => void;
 }) {
   const [start, setStart] = useState(initialStart);
   const [end, setEnd] = useState(initialEnd);
@@ -540,6 +585,7 @@ function AdjustShiftTimeDialog({
   const startValid = isValidTimeToken(start);
   const endValid = isValidTimeToken(end);
   const canSave = startValid && endValid;
+  const standardRange = formatShiftTimeRange(standardStart, standardEnd);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -548,7 +594,8 @@ function AdjustShiftTimeDialog({
           <div className="space-y-1">
             <DialogTitle>Adjust shift times</DialogTitle>
             <DialogDescription>
-              Use 12-hour times like 10:30 AM or 4:00 PM.
+              Set a one-off start and end time for this employee. Custom times
+              are kept when you apply standard shift hours to the schedule.
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -588,17 +635,35 @@ function AdjustShiftTimeDialog({
           </div>
         </DialogBody>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
+        <DialogFooter className="sm:justify-between">
           <Button
             type="button"
-            disabled={!canSave}
-            onClick={() => onSave(start, end)}
+            variant="ghost"
+            className="text-zinc-600 dark:text-zinc-400"
+            onClick={() => {
+              setStart(standardStart);
+              setEnd(standardEnd);
+            }}
           >
-            Save times
+            Use standard ({standardRange})
           </Button>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={!canSave}
+              onClick={() => {
+                const matchesStandard =
+                  start.trim() === standardStart.trim() &&
+                  end.trim() === standardEnd.trim();
+                onSave(start, end, !matchesStandard);
+              }}
+            >
+              Save times
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

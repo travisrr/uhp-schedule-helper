@@ -149,8 +149,9 @@ export function ShiftHoursSettingsContent() {
 
         <p className="text-sm text-zinc-500">
           Use 12-hour times like 10:30 AM or 4:00 PM. Saved defaults apply when a
-          shift has no time assigned yet. Use Apply to schedule to update times on
-          all assigned shifts in the current schedule.
+          shift has no time assigned yet. Use Apply to schedule to update standard
+          times on assigned shifts. One-off times you set on individual employees
+          are left unchanged.
         </p>
 
         <div className="flex flex-wrap items-center gap-3">

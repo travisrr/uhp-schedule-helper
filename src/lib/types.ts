@@ -22,6 +22,8 @@ export interface AvailabilityData {
 export interface ShiftAssignment {
   employee: string;
   timeRange: string;
+  /** When true, global "Apply shift hours" skips this shift. */
+  timeOverride?: boolean;
 }
 
 export interface RoleBlock {

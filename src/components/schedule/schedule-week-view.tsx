@@ -155,7 +155,16 @@ function SideCells({
       <td className={SPACER_CELL} />
       <td
         className={cn(TIME_CELL, canEdit && hasEmployee && INTERACTIVE_CELL)}
-        title={displayTimeRange || undefined}
+        title={
+          canEdit && hasEmployee
+            ? `${displayTimeRange} — click to adjust`
+            : displayTimeRange || undefined
+        }
+        onClick={
+          canEdit && hasEmployee
+            ? () => actions.openTimeEditor(item.ref, item.timeRange)
+            : undefined
+        }
         onContextMenu={
           canEdit && hasEmployee
             ? (event) => actions.openTimeMenu(event, item.ref, item.timeRange)

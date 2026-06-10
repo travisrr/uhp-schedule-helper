@@ -13,6 +13,7 @@ import {
   isValidTimeToken,
   parseShiftTimeRange,
 } from "@/lib/time-format";
+import { isEmployeeAvailableForPeriod } from "@/lib/availability-utils";
 import type {
   AvailabilityData,
   ScheduleData,
@@ -42,6 +43,8 @@ export interface ShiftListing extends ShiftRef {
 export interface EmployeeOption {
   employee: string;
   role: string;
+  /** False when the target shift falls outside this employee's availability. */
+  availableForShift?: boolean;
 }
 
 function getShiftAtRef(
@@ -104,6 +107,7 @@ function normalizeEmployeeKey(name: string): string {
 export function listAllEmployees(
   availability: AvailabilityData | null,
   schedule: ScheduleData,
+  shiftContext?: { day: DayKey; period: "AM" | "PM" },
 ): EmployeeOption[] {
   const seen = new Set<string>();
   const options: EmployeeOption[] = [];
@@ -135,9 +139,23 @@ export function listAllEmployees(
     }
   }
 
-  return options.sort((left, right) =>
+  const sorted = options.sort((left, right) =>
     left.employee.localeCompare(right.employee),
   );
+
+  if (!shiftContext || !availability) {
+    return sorted;
+  }
+
+  return sorted.map((option) => ({
+    ...option,
+    availableForShift: isEmployeeAvailableForPeriod(
+      availability,
+      option.employee,
+      shiftContext.day,
+      shiftContext.period,
+    ),
+  }));
 }
 
 export function addShiftToRole(
@@ -349,13 +367,16 @@ export function applyShiftHoursToSchedule(
           shifts: roleBlock.shifts.map((shift) => {
             if (!shift.employee.trim()) {
               return isFohManagementRole(roleBlock.role)
-                ? { ...shift, timeRange: "" }
+                ? { ...shift, timeRange: "", timeOverride: false }
                 : shift;
             }
+
+            if (shift.timeOverride) return shift;
 
             return {
               ...shift,
               timeRange: timeRangeForPeriod(periodBlock.period, shiftHours),
+              timeOverride: false,
             };
           }),
         })),
@@ -368,7 +389,10 @@ export function updateShiftTimeRange(
   schedule: ScheduleData,
   ref: ShiftRef,
   timeRange: string,
+  options?: { timeOverride?: boolean },
 ): ScheduleData {
+  const timeOverride = options?.timeOverride ?? true;
+
   return {
     ...schedule,
     days: schedule.days.map((day) => {
@@ -387,7 +411,9 @@ export function updateShiftTimeRange(
               return {
                 ...roleBlock,
                 shifts: roleBlock.shifts.map((shift, shiftIndex) =>
-                  shiftIndex === ref.shiftIndex ? { ...shift, timeRange } : shift,
+                  shiftIndex === ref.shiftIndex
+                    ? { ...shift, timeRange, timeOverride }
+                    : shift,
                 ),
               };
             }),

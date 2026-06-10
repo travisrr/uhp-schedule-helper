@@ -1,7 +1,11 @@
+import {
+  canWorkAM,
+  canWorkPM,
+  findEmployeeInAvailability,
+  normalizeEmployeeName,
+} from "../availability-utils";
 import type {
   AvailabilityData,
-  AvailabilityStatus,
-  EmployeeAvailability,
   MealPeriodBlock,
   RoleBlock,
   ScheduleData,
@@ -20,20 +24,6 @@ import {
   formatGeneratedTimestamp,
   toISODateString,
 } from "../week-utils";
-
-function canWorkAM(status: AvailabilityStatus): boolean {
-  const trimmed = status.trim();
-  if (!trimmed || trimmed.toUpperCase() === "OFF") return false;
-  if (trimmed.toUpperCase() === "OPEN") return true;
-  return /only\s*am/i.test(trimmed);
-}
-
-function canWorkPM(status: AvailabilityStatus): boolean {
-  const trimmed = status.trim();
-  if (!trimmed || trimmed.toUpperCase() === "OFF") return false;
-  if (trimmed.toUpperCase() === "OPEN") return true;
-  return /only\s*pm/i.test(trimmed);
-}
 
 function getRoleName(role: string): string {
   const trimmed = role.trim();
@@ -77,67 +67,6 @@ function getMealBlock(day: ScheduleDay, period: "AM" | "PM"): MealPeriodBlock {
       roles: [],
     }
   );
-}
-
-function normalizeEmployeeName(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[.,]/g, " ")
-    .replace(/\s+/g, " ");
-}
-
-function nameParts(name: string): string[] {
-  return normalizeEmployeeName(name)
-    .split(/[\s,]+/)
-    .filter(Boolean)
-    .sort();
-}
-
-function namesMatch(left: string, right: string): boolean {
-  const normalizedLeft = normalizeEmployeeName(left);
-  const normalizedRight = normalizeEmployeeName(right);
-  if (normalizedLeft === normalizedRight) return true;
-
-  const leftParts = nameParts(left);
-  const rightParts = nameParts(right);
-  return (
-    leftParts.length >= 2 &&
-    rightParts.length >= 2 &&
-    leftParts.join(" ") === rightParts.join(" ")
-  );
-}
-
-function buildAvailabilityLookup(
-  availability: AvailabilityData,
-): Map<string, EmployeeAvailability> {
-  const lookup = new Map<string, EmployeeAvailability>();
-
-  for (const employee of availability.employees) {
-    const key = normalizeEmployeeName(employee.employee);
-    if (!lookup.has(key)) {
-      lookup.set(key, employee);
-    }
-  }
-
-  return lookup;
-}
-
-function findEmployeeInAvailability(
-  priorName: string,
-  availability: AvailabilityData,
-  lookup: Map<string, EmployeeAvailability>,
-): EmployeeAvailability | null {
-  const direct = lookup.get(normalizeEmployeeName(priorName));
-  if (direct) return direct;
-
-  for (const employee of availability.employees) {
-    if (namesMatch(priorName, employee.employee)) {
-      return employee;
-    }
-  }
-
-  return null;
 }
 
 function addShiftToRoleMap(
@@ -198,8 +127,6 @@ function generateFromPriorSchedule(
   priorSchedule: ScheduleData,
   shiftHours: ShiftHoursSettings,
 ): ScheduleDay[] {
-  const availabilityLookup = buildAvailabilityLookup(availability);
-
   return DAYS.map((dayKey) => {
     const day = createEmptyDay(dayKey, dateLabels[dayKey]);
     const amByRole = new Map<string, ShiftAssignment[]>();
@@ -217,7 +144,6 @@ function generateFromPriorSchedule(
             const employee = findEmployeeInAvailability(
               shift.employee,
               availability,
-              availabilityLookup,
             );
             if (!employee) continue;
 
@@ -226,11 +152,14 @@ function generateFromPriorSchedule(
               mealPeriod.period === "AM" ? canWorkAM(status) : canWorkPM(status);
             if (!canWork) continue;
 
+            const priorTime = shift.timeRange.trim();
             addShiftToRoleMap(roleMap, role, {
               employee: employee.employee,
               timeRange:
-                shift.timeRange.trim() ||
+                priorTime ||
                 timeRangeForPeriod(mealPeriod.period, shiftHours),
+              timeOverride:
+                shift.timeOverride ?? priorTime.length > 0,
             });
           }
         }
