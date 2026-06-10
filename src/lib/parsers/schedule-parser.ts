@@ -28,7 +28,13 @@ const ROLE_PATTERNS = [
   "prep cook",
   "sous chef",
   "dishwasher",
+  "supervisor",
 ];
+
+const AM_NAME_COL = 0;
+const AM_TIME_COL = 3;
+const PM_NAME_COL = 5;
+const PM_TIME_COL = 8;
 
 function detectMealPeriod(text: string): "AM" | "PM" | null {
   const upper = text.toUpperCase();
@@ -51,6 +57,17 @@ function isRoleHeader(text: string): string | null {
   return null;
 }
 
+function parseRoleLabel(text: string): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  const roleHeader = isRoleHeader(trimmed);
+  if (roleHeader) return roleHeader;
+  if (/\(from schedule\)/i.test(trimmed)) return trimmed;
+
+  return null;
+}
+
 function parseShiftCell(text: string): ShiftAssignment | null {
   const trimmed = text.trim();
   if (!trimmed) return null;
@@ -66,11 +83,29 @@ function parseShiftCell(text: string): ShiftAssignment | null {
   };
 }
 
+function parseNameAndTime(
+  name: string,
+  time: string,
+): ShiftAssignment | null {
+  const trimmedName = name.trim();
+  const timeRange = extractTimeRange(time.trim());
+  if (!trimmedName || !timeRange) return null;
+
+  return {
+    employee: trimmedName,
+    timeRange,
+  };
+}
+
 function parseGeneratedAt(rows: RawSheet): string | null {
-  for (const row of rows.slice(0, 6)) {
+  for (const row of rows) {
+    for (const cell of row) {
+      const match = cell.trim().match(/^generated on:\s*(.+)$/i);
+      if (match) return match[1].trim();
+    }
     const joined = row.join(" ").trim();
-    const match = joined.match(/generated on:\s*(.+)$/i);
-    if (match) return match[1].trim();
+    const joinedMatch = joined.match(/generated on:\s*(.+)$/i);
+    if (joinedMatch) return joinedMatch[1].trim();
   }
   return null;
 }
@@ -139,10 +174,95 @@ function getRoleBlock(
   return block;
 }
 
-export function parseScheduleSheet(rows: RawSheet): ScheduleData {
-  const metrics = parseMetrics(rows);
-  const generatedAt = parseGeneratedAt(rows);
-  const days: ScheduleDay[] = DAYS.map(createEmptyDay);
+function addShiftToDay(
+  day: ScheduleDay,
+  period: "AM" | "PM",
+  role: string | null,
+  shift: ShiftAssignment,
+): void {
+  const mealBlock = getMealBlock(day, period);
+  const roleBlock = getRoleBlock(mealBlock, role ?? "Staff");
+  roleBlock.shifts.push(shift);
+}
+
+function isShiftReportColumnLayout(rows: RawSheet): boolean {
+  return rows.some(
+    (row) =>
+      /^shift report$/i.test(row[AM_NAME_COL]?.trim() ?? "") ||
+      (row[AM_NAME_COL]?.trim().toUpperCase() === "AM" &&
+        row[PM_NAME_COL]?.trim().toUpperCase() === "PM"),
+  );
+}
+
+function parseShiftReportColumnLayout(rows: RawSheet): ScheduleDay[] {
+  const days = DAYS.map(createEmptyDay);
+  let currentDay: ScheduleDay | null = null;
+  let amRole: string | null = null;
+  let pmRole: string | null = null;
+
+  const startIndex = rows.findIndex((row) =>
+    /^shift report$/i.test(row[AM_NAME_COL]?.trim() ?? ""),
+  );
+  const scanRows = startIndex >= 0 ? rows.slice(startIndex) : rows;
+
+  for (const row of scanRows) {
+    if (!row || row.every((cell) => !cell.trim())) continue;
+
+    const colA = row[AM_NAME_COL]?.trim() ?? "";
+    const colD = row[AM_TIME_COL]?.trim() ?? "";
+    const colF = row[PM_NAME_COL]?.trim() ?? "";
+    const colI = row[PM_TIME_COL]?.trim() ?? "";
+
+    if (/^shift report$/i.test(colA)) continue;
+    if (/^generated on:/i.test(colA)) continue;
+
+    const dayHeader = parseDayHeader(colA);
+    if (dayHeader) {
+      currentDay = days.find((day) => day.day === dayHeader.day) ?? null;
+      if (currentDay && dayHeader.dateLabel) {
+        currentDay.dateLabel = dayHeader.dateLabel;
+      }
+      amRole = null;
+      pmRole = null;
+      continue;
+    }
+
+    if (colA.toUpperCase() === "AM" && colF.toUpperCase() === "PM") {
+      amRole = null;
+      pmRole = null;
+      continue;
+    }
+
+    if (!currentDay) continue;
+
+    if (colA) {
+      const amRoleLabel = parseRoleLabel(colA);
+      const amShift = parseNameAndTime(colA, colD);
+
+      if (amShift) {
+        addShiftToDay(currentDay, "AM", amRole, amShift);
+      } else if (amRoleLabel) {
+        amRole = amRoleLabel;
+      }
+    }
+
+    if (colF) {
+      const pmRoleLabel = parseRoleLabel(colF);
+      const pmShift = parseNameAndTime(colF, colI);
+
+      if (pmShift) {
+        addShiftToDay(currentDay, "PM", pmRole, pmShift);
+      } else if (pmRoleLabel) {
+        pmRole = pmRoleLabel;
+      }
+    }
+  }
+
+  return days;
+}
+
+function parseLegacyScheduleLayout(rows: RawSheet): ScheduleDay[] {
+  const days = DAYS.map(createEmptyDay);
 
   let currentDay: ScheduleDay | null = null;
   let currentPeriod: "AM" | "PM" = "AM";
@@ -152,54 +272,104 @@ export function parseScheduleSheet(rows: RawSheet): ScheduleData {
     if (!row || row.every((cell) => !cell.trim())) continue;
 
     const joined = row.join(" ").trim();
-    const dayHeader = parseDayHeader(row[0] ?? joined);
+    const firstCell = row[AM_NAME_COL]?.trim() ?? "";
+
+    const dayHeader = parseDayHeader(firstCell || joined);
     if (dayHeader) {
       currentDay = days.find((day) => day.day === dayHeader.day) ?? null;
       if (currentDay && dayHeader.dateLabel) {
         currentDay.dateLabel = dayHeader.dateLabel;
       }
       currentRole = null;
-      const period = detectMealPeriod(joined);
-      if (period) currentPeriod = period;
+      continue;
+    }
+
+    if (
+      firstCell.toUpperCase() === "AM" &&
+      row[PM_NAME_COL]?.trim().toUpperCase() === "PM"
+    ) {
+      currentRole = null;
       continue;
     }
 
     const periodFromRow = detectMealPeriod(joined);
-    if (periodFromRow && rowIncludes(row, "am", "pm")) {
+    if (
+      periodFromRow &&
+      rowIncludes(row, "am", "pm") &&
+      !extractTimeRange(colOrEmpty(row, AM_TIME_COL)) &&
+      !extractTimeRange(colOrEmpty(row, PM_TIME_COL))
+    ) {
       currentPeriod = periodFromRow;
       currentRole = null;
       continue;
     }
 
-    const roleHeader = row.find((cell) => isRoleHeader(cell));
+    const roleHeader = row.find((cell) => parseRoleLabel(cell));
     if (roleHeader) {
-      currentRole = isRoleHeader(roleHeader);
+      currentRole = parseRoleLabel(roleHeader);
       continue;
     }
 
     if (!currentDay) continue;
 
-    const mealBlock = getMealBlock(currentDay, currentPeriod);
-    const roleName = currentRole ?? "Staff";
-    const roleBlock = getRoleBlock(mealBlock, roleName);
+    const amShift = parseNameAndTime(
+      colOrEmpty(row, AM_NAME_COL),
+      colOrEmpty(row, AM_TIME_COL),
+    );
+    const pmShift = parseNameAndTime(
+      colOrEmpty(row, PM_NAME_COL),
+      colOrEmpty(row, PM_TIME_COL),
+    );
 
-    for (const cell of row) {
-      const shift = parseShiftCell(cell);
-      if (shift) roleBlock.shifts.push(shift);
+    if (amShift) {
+      addShiftToDay(currentDay, "AM", currentRole, amShift);
     }
+    if (pmShift) {
+      addShiftToDay(currentDay, "PM", currentRole, pmShift);
+    }
+
+    if (!amShift && !pmShift) {
+      const mealBlock = getMealBlock(currentDay, currentPeriod);
+      const roleBlock = getRoleBlock(mealBlock, currentRole ?? "Staff");
+
+      for (const cell of row) {
+        const shift = parseShiftCell(cell);
+        if (shift) roleBlock.shifts.push(shift);
+      }
+    }
+  }
+
+  return days;
+}
+
+function colOrEmpty(row: string[], index: number): string {
+  return row[index]?.trim() ?? "";
+}
+
+function hasScheduledShifts(days: ScheduleDay[]): boolean {
+  return days.some((day) =>
+    day.mealPeriods.some((period) =>
+      period.roles.some((role) => role.shifts.length > 0),
+    ),
+  );
+}
+
+export function parseScheduleSheet(rows: RawSheet): ScheduleData {
+  const metrics = parseMetrics(rows);
+  const generatedAt = parseGeneratedAt(rows);
+
+  let days = isShiftReportColumnLayout(rows)
+    ? parseShiftReportColumnLayout(rows)
+    : parseLegacyScheduleLayout(rows);
+
+  if (!hasScheduledShifts(days)) {
+    days = buildFallbackSchedule(rows);
   }
 
   return {
     metrics,
     generatedAt,
-    days: days.filter(
-      (day) =>
-        day.mealPeriods.some((period) =>
-          period.roles.some((role) => role.shifts.length > 0),
-        ),
-    ).length > 0
-      ? days
-      : buildFallbackSchedule(rows),
+    days,
   };
 }
 
@@ -228,18 +398,33 @@ function buildFallbackSchedule(rows: RawSheet): ScheduleDay[] {
       continue;
     }
 
-    const shiftTexts = row.filter((cell) => extractTimeRange(cell));
-    if (shiftTexts.length === 0) continue;
+    const amShift = parseNameAndTime(
+      colOrEmpty(row, AM_NAME_COL),
+      colOrEmpty(row, AM_TIME_COL),
+    );
+    const pmShift = parseNameAndTime(
+      colOrEmpty(row, PM_NAME_COL),
+      colOrEmpty(row, PM_TIME_COL),
+    );
 
     const day = days[dayIndex];
     if (!day) continue;
-    const mealBlock = getMealBlock(day, period);
-    const roleBlock = getRoleBlock(mealBlock, role);
 
-    shiftTexts.forEach((text) => {
-      const shift = parseShiftCell(text);
-      if (shift) roleBlock.shifts.push(shift);
-    });
+    if (amShift) addShiftToDay(day, "AM", role, amShift);
+    if (pmShift) addShiftToDay(day, "PM", role, pmShift);
+
+    if (!amShift && !pmShift) {
+      const shiftTexts = row.filter((cell) => extractTimeRange(cell));
+      if (shiftTexts.length === 0) continue;
+
+      const mealBlock = getMealBlock(day, period);
+      const roleBlock = getRoleBlock(mealBlock, role);
+
+      shiftTexts.forEach((text) => {
+        const shift = parseShiftCell(text);
+        if (shift) roleBlock.shifts.push(shift);
+      });
+    }
   }
 
   return days;
