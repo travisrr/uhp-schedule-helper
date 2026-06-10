@@ -1,13 +1,18 @@
 "use client";
 
 import { useAppData } from "@/context/data-context";
-import { DAY_LABELS, DAYS } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { ScheduleEmployeeStatsPanel } from "@/components/schedule/schedule-employee-stats-panel";
+import {
+  ScheduleShiftActionProvider,
+  useScheduleShiftActions,
+} from "@/components/schedule/schedule-shift-actions";
+import type { ShiftRef } from "@/lib/schedule-mutations";
+import { cn, DAY_LABELS, DAYS, type DayKey } from "@/lib/utils";
 import type { MealPeriodBlock, ScheduleData } from "@/lib/types";
 
 type RowItem =
   | { kind: "role"; role: string }
-  | { kind: "shift"; employee: string; timeRange: string };
+  | { kind: "shift"; employee: string; timeRange: string; ref: ShiftRef };
 
 interface CombinedRow {
   am: RowItem | null;
@@ -26,31 +31,40 @@ const NAME_CELL = `${CELL} max-w-0 overflow-hidden text-ellipsis whitespace-nowr
 const SPACER_CELL = `${CELL} px-0 py-1`;
 const TIME_CELL = `${CELL} whitespace-nowrap px-2 py-1 text-right text-[12px] tabular-nums`;
 const EMPTY_SIDE_CELL = `${CELL} px-2 py-1`;
+const INTERACTIVE_CELL =
+  "cursor-context-menu hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-zinc-400";
 
-function flattenMealPeriod(block: MealPeriodBlock): RowItem[] {
+function flattenMealPeriod(day: DayKey, block: MealPeriodBlock): RowItem[] {
   const items: RowItem[] = [];
 
   for (const roleBlock of block.roles) {
     if (roleBlock.shifts.length === 0) continue;
     items.push({ kind: "role", role: roleBlock.role });
-    for (const shift of roleBlock.shifts) {
+    roleBlock.shifts.forEach((shift, shiftIndex) => {
       items.push({
         kind: "shift",
         employee: shift.employee,
         timeRange: shift.timeRange,
+        ref: {
+          day,
+          period: block.period,
+          role: roleBlock.role,
+          shiftIndex,
+        },
       });
-    }
+    });
   }
 
   return items;
 }
 
 function buildCombinedRows(
+  day: DayKey,
   amBlock: MealPeriodBlock,
   pmBlock: MealPeriodBlock,
 ): CombinedRow[] {
-  const amItems = flattenMealPeriod(amBlock);
-  const pmItems = flattenMealPeriod(pmBlock);
+  const amItems = flattenMealPeriod(day, amBlock);
+  const pmItems = flattenMealPeriod(day, pmBlock);
   const rowCount = Math.max(amItems.length, pmItems.length);
 
   if (rowCount === 0) return [];
@@ -61,7 +75,15 @@ function buildCombinedRows(
   }));
 }
 
-function SideCells({ item }: { item: RowItem | null }) {
+function SideCells({
+  item,
+  editable,
+}: {
+  item: RowItem | null;
+  editable: boolean;
+}) {
+  const actions = useScheduleShiftActions();
+
   if (!item) {
     return (
       <>
@@ -80,29 +102,55 @@ function SideCells({ item }: { item: RowItem | null }) {
     );
   }
 
+  const canEdit = editable && actions;
+
   return (
     <>
-      <td className={NAME_CELL} colSpan={2} title={item.employee}>
+      <td
+        className={cn(NAME_CELL, canEdit && INTERACTIVE_CELL)}
+        colSpan={2}
+        title={item.employee}
+        onContextMenu={
+          canEdit
+            ? (event) =>
+                actions.openEmployeeMenu(event, item.ref, item.employee)
+            : undefined
+        }
+      >
         {item.employee}
       </td>
       <td className={SPACER_CELL} />
-      <td className={TIME_CELL}>{item.timeRange}</td>
+      <td
+        className={cn(TIME_CELL, canEdit && INTERACTIVE_CELL)}
+        title={item.timeRange}
+        onContextMenu={
+          canEdit
+            ? (event) => actions.openTimeMenu(event, item.ref, item.timeRange)
+            : undefined
+        }
+      >
+        {item.timeRange}
+      </td>
     </>
   );
 }
 
 function DaySection({
+  day,
   dateLabel,
   amBlock,
   pmBlock,
   isFirstDay,
+  editable,
 }: {
+  day: DayKey;
   dateLabel: string;
   amBlock: MealPeriodBlock;
   pmBlock: MealPeriodBlock;
   isFirstDay: boolean;
+  editable: boolean;
 }) {
-  const combinedRows = buildCombinedRows(amBlock, pmBlock);
+  const combinedRows = buildCombinedRows(day, amBlock, pmBlock);
 
   return (
     <>
@@ -130,65 +178,43 @@ function DaySection({
       </tr>
       {combinedRows.map((row, index) => (
         <tr key={index}>
-          <SideCells item={row.am} />
+          <SideCells item={row.am} editable={editable} />
           <td className={cn(GAP, "w-4 min-w-4")} />
-          <SideCells item={row.pm} />
+          <SideCells item={row.pm} editable={editable} />
         </tr>
       ))}
     </>
   );
 }
 
-interface ScheduleWeekViewProps {
-  schedule?: ScheduleData | null;
-  title?: string;
-  emptyMessage?: string;
-}
-
-export function ScheduleWeekView({
-  schedule: scheduleProp,
-  title = "Shift Report",
-  emptyMessage = "Select a week above and generate a schedule from availability, or upload a weekly schedule report in Settings.",
-}: ScheduleWeekViewProps = {}) {
-  const { schedule: contextSchedule } = useAppData();
-  const schedule = scheduleProp ?? contextSchedule;
-
-  if (!schedule) {
-    return (
-      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-100/50 dark:border-zinc-800 dark:bg-zinc-950/50">
-        <p className="text-sm text-zinc-500">{emptyMessage}</p>
-      </div>
-    );
-  }
-
+function ScheduleWeekTable({
+  schedule,
+  title,
+  editable,
+}: {
+  schedule: ScheduleData;
+  title: string;
+  editable: boolean;
+}) {
   const orderedDays = DAYS.map((dayKey) =>
     schedule.days.find((day) => day.day === dayKey),
   ).filter(Boolean);
 
-  if (orderedDays.length === 0) {
-    return (
-      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-100/50 dark:border-zinc-800 dark:bg-zinc-950/50">
-        <p className="text-sm text-zinc-500">
-          Schedule file parsed, but no shift blocks were detected.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="overflow-x-auto rounded border border-black bg-white">
-      <table className="w-full min-w-[1000px] table-fixed border-collapse text-sm">
-        <colgroup>
-          <col style={{ width: "18%" }} />
-          <col style={{ width: "14%" }} />
-          <col style={{ width: "8%" }} />
-          <col style={{ width: "16%" }} />
-          <col style={{ width: "2%" }} />
-          <col style={{ width: "18%" }} />
-          <col style={{ width: "14%" }} />
-          <col style={{ width: "8%" }} />
-          <col style={{ width: "16%" }} />
-        </colgroup>
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+      <div className="min-w-0 shrink-0 overflow-x-auto rounded border border-black bg-white lg:max-w-[62%]">
+        <table className="w-full min-w-[640px] table-fixed border-collapse text-sm">
+          <colgroup>
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "6%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "2%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "6%" }} />
+            <col style={{ width: "14%" }} />
+          </colgroup>
         <tbody>
           <tr>
             <td className={TITLE} colSpan={9}>
@@ -220,15 +246,75 @@ export function ScheduleWeekView({
             return (
               <DaySection
                 key={day.day}
+                day={day.day}
                 dateLabel={dateLabel}
                 amBlock={amBlock}
                 pmBlock={pmBlock}
                 isFirstDay={dayIndex === 0}
+                editable={editable}
               />
             );
           })}
         </tbody>
-      </table>
+        </table>
+      </div>
+      <ScheduleEmployeeStatsPanel
+        className="lg:min-w-[280px] lg:flex-1"
+        schedule={schedule}
+      />
     </div>
+  );
+}
+
+interface ScheduleWeekViewProps {
+  schedule?: ScheduleData | null;
+  title?: string;
+  emptyMessage?: string;
+  editable?: boolean;
+}
+
+export function ScheduleWeekView({
+  schedule: scheduleProp,
+  title = "Shift Report",
+  emptyMessage = "Select a week above and generate a schedule from availability, or upload a weekly schedule report in Settings.",
+  editable: editableProp,
+}: ScheduleWeekViewProps = {}) {
+  const { schedule: contextSchedule, setSchedule } = useAppData();
+  const schedule = scheduleProp ?? contextSchedule;
+  const editable = editableProp ?? scheduleProp == null;
+
+  if (!schedule) {
+    return (
+      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-100/50 dark:border-zinc-800 dark:bg-zinc-950/50">
+        <p className="text-sm text-zinc-500">{emptyMessage}</p>
+      </div>
+    );
+  }
+
+  const orderedDays = DAYS.map((dayKey) =>
+    schedule.days.find((day) => day.day === dayKey),
+  ).filter(Boolean);
+
+  if (orderedDays.length === 0) {
+    return (
+      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-100/50 dark:border-zinc-800 dark:bg-zinc-950/50">
+        <p className="text-sm text-zinc-500">
+          Schedule file parsed, but no shift blocks were detected.
+        </p>
+      </div>
+    );
+  }
+
+  if (!editable) {
+    return <ScheduleWeekTable schedule={schedule} title={title} editable={false} />;
+  }
+
+  return (
+    <ScheduleShiftActionProvider
+      schedule={schedule}
+      onScheduleChange={setSchedule}
+    >
+      <ScheduleWeekTable schedule={schedule} title={title} editable />
+    </ScheduleShiftActionProvider>
   );
 }
