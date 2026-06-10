@@ -1,6 +1,7 @@
 import type {
   AvailabilityData,
   AvailabilityStatus,
+  EmployeeAvailability,
   MealPeriodBlock,
   RoleBlock,
   ScheduleData,
@@ -75,52 +76,65 @@ function getMealBlock(day: ScheduleDay, period: "AM" | "PM"): MealPeriodBlock {
   );
 }
 
-interface PriorShiftTemplate {
-  role: string;
-  timeRange: string;
-}
-
-type PriorDayLookup = Map<"AM" | "PM", PriorShiftTemplate>;
-type PriorEmployeeLookup = Map<string, Map<DayKey, PriorDayLookup>>;
-
 function normalizeEmployeeName(name: string): string {
-  return name.trim().toLowerCase();
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[.,]/g, " ")
+    .replace(/\s+/g, " ");
 }
 
-function buildPriorScheduleLookup(schedule: ScheduleData): PriorEmployeeLookup {
-  const lookup: PriorEmployeeLookup = new Map();
+function nameParts(name: string): string[] {
+  return normalizeEmployeeName(name)
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .sort();
+}
 
-  for (const day of schedule.days) {
-    for (const mealPeriod of day.mealPeriods) {
-      for (const roleBlock of mealPeriod.roles) {
-        for (const shift of roleBlock.shifts) {
-          const employeeKey = normalizeEmployeeName(shift.employee);
-          if (!employeeKey) continue;
+function namesMatch(left: string, right: string): boolean {
+  const normalizedLeft = normalizeEmployeeName(left);
+  const normalizedRight = normalizeEmployeeName(right);
+  if (normalizedLeft === normalizedRight) return true;
 
-          let dayLookup = lookup.get(employeeKey);
-          if (!dayLookup) {
-            dayLookup = new Map();
-            lookup.set(employeeKey, dayLookup);
-          }
+  const leftParts = nameParts(left);
+  const rightParts = nameParts(right);
+  return (
+    leftParts.length >= 2 &&
+    rightParts.length >= 2 &&
+    leftParts.join(" ") === rightParts.join(" ")
+  );
+}
 
-          let periodLookup = dayLookup.get(day.day);
-          if (!periodLookup) {
-            periodLookup = new Map();
-            dayLookup.set(day.day, periodLookup);
-          }
+function buildAvailabilityLookup(
+  availability: AvailabilityData,
+): Map<string, EmployeeAvailability> {
+  const lookup = new Map<string, EmployeeAvailability>();
 
-          periodLookup.set(mealPeriod.period, {
-            role: getRoleName(roleBlock.role),
-            timeRange: shift.timeRange.trim() || (
-              mealPeriod.period === "AM" ? DEFAULT_AM_TIME : DEFAULT_PM_TIME
-            ),
-          });
-        }
-      }
+  for (const employee of availability.employees) {
+    const key = normalizeEmployeeName(employee.employee);
+    if (!lookup.has(key)) {
+      lookup.set(key, employee);
     }
   }
 
   return lookup;
+}
+
+function findEmployeeInAvailability(
+  priorName: string,
+  availability: AvailabilityData,
+  lookup: Map<string, EmployeeAvailability>,
+): EmployeeAvailability | null {
+  const direct = lookup.get(normalizeEmployeeName(priorName));
+  if (direct) return direct;
+
+  for (const employee of availability.employees) {
+    if (namesMatch(priorName, employee.employee)) {
+      return employee;
+    }
+  }
+
+  return null;
 }
 
 function addShiftToRoleMap(
@@ -133,44 +147,87 @@ function addShiftToRoleMap(
   roleMap.set(role, shifts);
 }
 
-export function generateScheduleFromAvailability(
+function generateFromAvailabilityOnly(
   availability: AvailabilityData,
-  weekStartWednesday: Date,
-  priorSchedule?: ScheduleData | null,
-): ScheduleData {
-  const dateLabels = buildDayDateLabels(weekStartWednesday);
-  const priorLookup = priorSchedule
-    ? buildPriorScheduleLookup(priorSchedule)
-    : null;
-
-  const days = DAYS.map((dayKey) => {
+  dateLabels: Record<DayKey, string>,
+): ScheduleDay[] {
+  return DAYS.map((dayKey) => {
     const day = createEmptyDay(dayKey, dateLabels[dayKey]);
     const amByRole = new Map<string, ShiftAssignment[]>();
     const pmByRole = new Map<string, ShiftAssignment[]>();
+    const seenEmployees = new Set<string>();
 
     for (const employee of availability.employees) {
-      const status = employee.days[dayKey];
       const employeeKey = normalizeEmployeeName(employee.employee);
-      const priorDay = priorLookup?.get(employeeKey)?.get(dayKey);
-      const isNewEmployee = priorLookup !== null && !priorLookup.has(employeeKey);
+      if (seenEmployees.has(employeeKey)) continue;
+      seenEmployees.add(employeeKey);
+
+      const status = employee.days[dayKey];
 
       if (canWorkAM(status)) {
-        const priorAM = priorDay?.get("AM");
-        if (priorAM || isNewEmployee || priorLookup === null) {
-          addShiftToRoleMap(amByRole, priorAM?.role ?? getRoleName(employee.role), {
-            employee: employee.employee,
-            timeRange: priorAM?.timeRange ?? DEFAULT_AM_TIME,
-          });
-        }
+        addShiftToRoleMap(amByRole, getRoleName(employee.role), {
+          employee: employee.employee,
+          timeRange: DEFAULT_AM_TIME,
+        });
       }
 
       if (canWorkPM(status)) {
-        const priorPM = priorDay?.get("PM");
-        if (priorPM || isNewEmployee || priorLookup === null) {
-          addShiftToRoleMap(pmByRole, priorPM?.role ?? getRoleName(employee.role), {
-            employee: employee.employee,
-            timeRange: priorPM?.timeRange ?? DEFAULT_PM_TIME,
-          });
+        addShiftToRoleMap(pmByRole, getRoleName(employee.role), {
+          employee: employee.employee,
+          timeRange: DEFAULT_PM_TIME,
+        });
+      }
+    }
+
+    const amBlock = getMealBlock(day, "AM");
+    const pmBlock = getMealBlock(day, "PM");
+    amBlock.roles = buildRoleBlocks(amByRole);
+    pmBlock.roles = buildRoleBlocks(pmByRole);
+
+    return day;
+  });
+}
+
+function generateFromPriorSchedule(
+  availability: AvailabilityData,
+  dateLabels: Record<DayKey, string>,
+  priorSchedule: ScheduleData,
+): ScheduleDay[] {
+  const availabilityLookup = buildAvailabilityLookup(availability);
+
+  return DAYS.map((dayKey) => {
+    const day = createEmptyDay(dayKey, dateLabels[dayKey]);
+    const amByRole = new Map<string, ShiftAssignment[]>();
+    const pmByRole = new Map<string, ShiftAssignment[]>();
+    const priorDay = priorSchedule.days.find((entry) => entry.day === dayKey);
+
+    if (priorDay) {
+      for (const mealPeriod of priorDay.mealPeriods) {
+        const roleMap = mealPeriod.period === "AM" ? amByRole : pmByRole;
+
+        for (const roleBlock of mealPeriod.roles) {
+          const role = getRoleName(roleBlock.role);
+
+          for (const shift of roleBlock.shifts) {
+            const employee = findEmployeeInAvailability(
+              shift.employee,
+              availability,
+              availabilityLookup,
+            );
+            if (!employee) continue;
+
+            const status = employee.days[dayKey];
+            const canWork =
+              mealPeriod.period === "AM" ? canWorkAM(status) : canWorkPM(status);
+            if (!canWork) continue;
+
+            addShiftToRoleMap(roleMap, role, {
+              employee: employee.employee,
+              timeRange:
+                shift.timeRange.trim() ||
+                (mealPeriod.period === "AM" ? DEFAULT_AM_TIME : DEFAULT_PM_TIME),
+            });
+          }
         }
       }
     }
@@ -182,8 +239,48 @@ export function generateScheduleFromAvailability(
 
     return day;
   });
+}
 
-  return {
+export interface GeneratedScheduleResult {
+  schedule: ScheduleData;
+  usedPriorBaseline: boolean;
+  priorShiftCount: number;
+  assignedShiftCount: number;
+}
+
+function countShiftsInDays(days: ScheduleDay[]): number {
+  return days.reduce(
+    (total, day) =>
+      total +
+      day.mealPeriods.reduce(
+        (periodTotal, period) =>
+          periodTotal +
+          period.roles.reduce(
+            (roleTotal, role) => roleTotal + role.shifts.length,
+            0,
+          ),
+        0,
+      ),
+    0,
+  );
+}
+
+export function generateScheduleFromAvailability(
+  availability: AvailabilityData,
+  weekStartWednesday: Date,
+  priorSchedule?: ScheduleData | null,
+): GeneratedScheduleResult {
+  const dateLabels = buildDayDateLabels(weekStartWednesday);
+  const usedPriorBaseline = priorSchedule != null;
+  const days = usedPriorBaseline
+    ? generateFromPriorSchedule(availability, dateLabels, priorSchedule)
+    : generateFromAvailabilityOnly(availability, dateLabels);
+  const priorShiftCount = usedPriorBaseline
+    ? countShiftsInDays(priorSchedule.days)
+    : 0;
+  const assignedShiftCount = countShiftsInDays(days);
+
+  const schedule: ScheduleData = {
     metrics: {
       totalHours: null,
       totalPay: null,
@@ -193,5 +290,12 @@ export function generateScheduleFromAvailability(
     generatedAt: formatGeneratedTimestamp(new Date()),
     weekStartDate: toISODateString(weekStartWednesday),
     days,
+  };
+
+  return {
+    schedule,
+    usedPriorBaseline,
+    priorShiftCount,
+    assignedShiftCount,
   };
 }

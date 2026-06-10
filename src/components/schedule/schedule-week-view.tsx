@@ -297,7 +297,7 @@ interface ScheduleWeekViewProps {
 export function ScheduleWeekView({
   schedule: scheduleProp,
   title = "Shift Report",
-  emptyMessage = "Select a week above and generate a schedule from availability, or upload a weekly schedule report in Settings.",
+  emptyMessage = "Import a prior schedule baseline, pick a week above, and click Generate Schedule.",
   editable: editableProp,
   showWeeklyStats = true,
 }: ScheduleWeekViewProps = {}) {

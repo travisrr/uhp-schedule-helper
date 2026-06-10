@@ -222,6 +222,61 @@ export function parseAvailabilitySheet(
   return { employees };
 }
 
+function normalizeEmployeeKey(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+function availabilityStatusRank(status: string): number {
+  const trimmed = status.trim();
+  if (!trimmed || trimmed.toUpperCase() === "OFF") return 0;
+  if (/only\s*(am|pm)/i.test(trimmed)) return 1;
+  if (trimmed.toUpperCase() === "OPEN") return 2;
+  return 1;
+}
+
+function mergeAvailabilityStatus(
+  left: string,
+  right: string,
+): EmployeeAvailability["days"][DayKey] {
+  return availabilityStatusRank(left) >= availabilityStatusRank(right)
+    ? left
+    : right;
+}
+
+function mergeAvailabilityEmployees(
+  employees: EmployeeAvailability[],
+): EmployeeAvailability[] {
+  const byName = new Map<string, EmployeeAvailability>();
+
+  for (const employee of employees) {
+    const key = normalizeEmployeeKey(employee.employee);
+    const existing = byName.get(key);
+
+    if (!existing) {
+      byName.set(key, {
+        ...employee,
+        days: { ...employee.days },
+      });
+      continue;
+    }
+
+    const mergedDays = { ...existing.days };
+    for (const day of DAYS) {
+      mergedDays[day] = mergeAvailabilityStatus(
+        existing.days[day],
+        employee.days[day],
+      );
+    }
+
+    byName.set(key, {
+      ...existing,
+      days: mergedDays,
+    });
+  }
+
+  return [...byName.values()];
+}
+
 export function parseAvailabilityWorkbook(
   sheets: Array<RawSheet | { name: string; rows: RawSheet }>,
 ): AvailabilityData {
@@ -238,5 +293,5 @@ export function parseAvailabilityWorkbook(
     employees.push(...parsed.employees);
   }
 
-  return { employees };
+  return { employees: mergeAvailabilityEmployees(employees) };
 }

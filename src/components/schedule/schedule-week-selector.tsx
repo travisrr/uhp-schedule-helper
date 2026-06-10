@@ -38,7 +38,7 @@ export function ScheduleWeekSelector() {
 
   const weekRangeLabel = formatWeekRange(weekStart);
   const employeeCount = availability?.employees.length ?? 0;
-  const canGenerate = employeeCount > 0;
+  const canGenerate = employeeCount > 0 && priorSchedule != null;
 
   function syncWeekStart(nextWeekStart: Date) {
     setSelectedWeekStart(toISODateString(nextWeekStart));
@@ -65,17 +65,24 @@ export function ScheduleWeekSelector() {
       return;
     }
 
-    const generated = generateScheduleFromAvailability(
+    if (!priorSchedule) {
+      setStatusMessage(
+        "No prior schedule baseline loaded — import one on the Prior Schedule page first, then generate again.",
+      );
+      return;
+    }
+
+    const result = generateScheduleFromAvailability(
       availability,
       weekStart,
-      priorSchedule?.schedule,
+      priorSchedule.schedule,
     );
-    setSchedule(generated);
+    setSchedule(result.schedule);
     setSelectedWeekStart(toISODateString(weekStart));
+
+    const skipped = result.priorShiftCount - result.assignedShiftCount;
     setStatusMessage(
-      priorSchedule
-        ? `Built schedule for ${availability.employees.length} employees across ${weekRangeLabel} using the prior schedule baseline.`
-        : `Built schedule for ${availability.employees.length} employees across ${weekRangeLabel}.`,
+      `Built ${result.assignedShiftCount} shifts for ${weekRangeLabel} from prior baseline (${result.priorShiftCount} template slots${skipped > 0 ? `; ${skipped} skipped as unavailable` : ""}).`,
     );
   }
 
@@ -88,8 +95,8 @@ export function ScheduleWeekSelector() {
             Schedule Week
           </div>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Pick the Wed–Tue period, then generate shift assignments from staff availability
-            {priorSchedule ? " and your imported prior schedule baseline." : "."}
+            Pick the Wed–Tue period, then generate shift assignments from your
+            prior schedule baseline and current availability.
           </p>
         </div>
 
@@ -142,7 +149,9 @@ export function ScheduleWeekSelector() {
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {canGenerate
               ? `${employeeCount} employees loaded from availability.`
-              : "No availability data yet. Upload a sheet in Settings to enable scheduling."}
+              : employeeCount > 0
+                ? `${employeeCount} employees loaded. Import a prior schedule baseline to enable generation.`
+                : "No availability data yet. Upload a sheet in Settings to enable scheduling."}
           </p>
           {priorSchedule ? (
             <p className="text-xs text-emerald-700 dark:text-emerald-400">

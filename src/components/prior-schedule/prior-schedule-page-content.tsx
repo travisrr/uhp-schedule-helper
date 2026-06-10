@@ -44,7 +44,8 @@ function countAssignedShifts(schedule: { days: { mealPeriods: { roles: { shifts:
 }
 
 export function PriorSchedulePageContent() {
-  const { priorSchedule, setPriorSchedule, clearPriorSchedule } = useAppData();
+  const { priorSchedule, setPriorSchedule, clearPriorSchedule, clearSchedule } =
+    useAppData();
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,9 +74,9 @@ export function PriorSchedulePageContent() {
               </p>
               <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
                 When you generate a new schedule on the Shift Report page, the app
-                matches each employee to their prior role and shift times by day of
-                week. Staff who are unavailable are skipped; new employees fall back
-                to their availability role and default shift times.
+                copies each day&apos;s role groupings and shift slots from this
+                baseline. Staff who are unavailable are skipped; everyone else keeps
+                their prior role and shift times for that day.
               </p>
             </div>
           </div>
@@ -92,8 +93,9 @@ export function PriorSchedulePageContent() {
               fileName,
               importedAt: new Date().toISOString(),
             });
+            clearSchedule();
             setSuccess(
-              `Prior schedule loaded: ${countActiveDays(data)} active days, ${countAssignedShifts(data)} shift assignments.`,
+              `Prior schedule loaded: ${countActiveDays(data)} active days, ${countAssignedShifts(data)} shift assignments. Re-generate on Shift Report to apply.`,
             );
             setError(null);
           }}

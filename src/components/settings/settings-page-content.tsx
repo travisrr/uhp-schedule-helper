@@ -81,7 +81,7 @@ export function SettingsPageContent() {
 
           <FileDropzone
             label="Schedule Ingestion"
-            description="Weekly shift report with AM/PM blocks, role assignments, times, and labor totals."
+            description="Loads a shift report directly into Shift Report (bypasses generation). For building a new week from availability, use Prior Schedule + Generate instead."
             parse={parseScheduleSheet}
             lastUploaded={scheduleFile}
             onSuccess={(fileName, data) => {
