@@ -28,6 +28,12 @@ export interface ShiftRef {
   shiftIndex: number;
 }
 
+export interface RoleRef {
+  day: DayKey;
+  period: "AM" | "PM";
+  role: string;
+}
+
 export interface ShiftListing extends ShiftRef {
   employee: string;
   timeRange: string;
@@ -132,6 +138,47 @@ export function listAllEmployees(
   return options.sort((left, right) =>
     left.employee.localeCompare(right.employee),
   );
+}
+
+export function addShiftToRole(
+  schedule: ScheduleData,
+  ref: RoleRef,
+  employee: string,
+  shiftHours?: ShiftHoursSettings,
+): ScheduleData {
+  const trimmedEmployee = employee.trim();
+  const timeRange = trimmedEmployee
+    ? defaultTimeForPeriod(ref.period, shiftHours)
+    : "";
+
+  return normalizeScheduleAssignments({
+    ...schedule,
+    days: schedule.days.map((day) => {
+      if (day.day !== ref.day) return day;
+
+      return {
+        ...day,
+        mealPeriods: day.mealPeriods.map((periodBlock) => {
+          if (periodBlock.period !== ref.period) return periodBlock;
+
+          return {
+            ...periodBlock,
+            roles: periodBlock.roles.map((roleBlock) => {
+              if (roleBlock.role !== ref.role) return roleBlock;
+
+              return {
+                ...roleBlock,
+                shifts: [
+                  ...roleBlock.shifts,
+                  { employee: trimmedEmployee, timeRange },
+                ],
+              };
+            }),
+          };
+        }),
+      };
+    }),
+  });
 }
 
 export function assignShiftEmployee(

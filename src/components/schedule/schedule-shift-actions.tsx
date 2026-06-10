@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { ArrowLeftRight, Clock3, UserMinus } from "lucide-react";
+import { ArrowLeftRight, Clock3, UserMinus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,6 +22,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useAppData } from "@/context/data-context";
 import {
+  addShiftToRole,
   assignShiftEmployee,
   clearShiftEmployee,
   formatShiftTimeRange,
@@ -33,6 +34,7 @@ import {
   swapShiftEmployees,
   updateShiftTimeRange,
   type EmployeeOption,
+  type RoleRef,
   type ShiftListing,
   type ShiftRef,
 } from "@/lib/schedule-mutations";
@@ -41,7 +43,8 @@ import { cn } from "@/lib/utils";
 
 type ContextMenuTarget =
   | { kind: "employee"; ref: ShiftRef; employee: string }
-  | { kind: "time"; ref: ShiftRef; timeRange: string };
+  | { kind: "time"; ref: ShiftRef; timeRange: string }
+  | { kind: "role"; ref: RoleRef };
 
 interface ScheduleShiftActionHandlers {
   openEmployeeMenu: (
@@ -54,6 +57,7 @@ interface ScheduleShiftActionHandlers {
     ref: ShiftRef,
     timeRange: string,
   ) => void;
+  openRoleMenu: (event: React.MouseEvent, ref: RoleRef) => void;
 }
 
 const ScheduleShiftActionContext =
@@ -80,6 +84,7 @@ export function ScheduleShiftActionProvider({
     null,
   );
   const [timeTarget, setTimeTarget] = useState<ContextMenuTarget | null>(null);
+  const [addRoleTarget, setAddRoleTarget] = useState<RoleRef | null>(null);
   const { availability, shiftHours } = useAppData();
 
   const isAssigning =
@@ -110,9 +115,9 @@ export function ScheduleShiftActionProvider({
   }, [menu]);
 
   const assignCandidates = useMemo(() => {
-    if (!isAssigning) return [];
+    if (!isAssigning && !addRoleTarget) return [];
     return listAllEmployees(availability, schedule);
-  }, [availability, isAssigning, schedule]);
+  }, [addRoleTarget, availability, isAssigning, schedule]);
 
   const swapCandidates = useMemo(() => {
     if (!swapTarget || swapTarget.kind !== "employee" || isAssigning) return [];
@@ -151,6 +156,16 @@ export function ScheduleShiftActionProvider({
           y: event.clientY,
         });
       },
+      openRoleMenu(event, ref) {
+        event.preventDefault();
+        event.stopPropagation();
+        setMenu({
+          kind: "role",
+          ref,
+          x: event.clientX,
+          y: event.clientY,
+        });
+      },
     }),
     [],
   );
@@ -182,6 +197,14 @@ export function ScheduleShiftActionProvider({
     setRemoveTarget(null);
   }
 
+  function handleAddRoleSelect(candidate: EmployeeOption) {
+    if (!addRoleTarget) return;
+    onScheduleChange(
+      addShiftToRole(schedule, addRoleTarget, candidate.employee, shiftHours),
+    );
+    setAddRoleTarget(null);
+  }
+
   return (
     <ScheduleShiftActionContext.Provider value={handlers}>
       {children}
@@ -193,7 +216,19 @@ export function ScheduleShiftActionProvider({
           onClick={(event) => event.stopPropagation()}
           onContextMenu={(event) => event.preventDefault()}
         >
-          {menu.kind === "employee" ? (
+          {menu.kind === "role" ? (
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-900"
+              onClick={() => {
+                setAddRoleTarget(menu.ref);
+                setMenu(null);
+              }}
+            >
+              <UserPlus className="size-4 shrink-0 text-zinc-500" />
+              Add employee to shift
+            </button>
+          ) : menu.kind === "employee" ? (
             <>
               <button
                 type="button"
@@ -239,17 +274,25 @@ export function ScheduleShiftActionProvider({
       ) : null}
 
       <EmployeePickerDialog
-        open={swapTarget?.kind === "employee"}
-        mode={isAssigning ? "assign" : "swap"}
+        open={swapTarget?.kind === "employee" || addRoleTarget !== null}
+        mode={
+          addRoleTarget ? "add" : isAssigning ? "assign" : "swap"
+        }
+        roleName={addRoleTarget?.role}
         sourceEmployee={
           swapTarget?.kind === "employee" ? swapTarget.employee : ""
         }
         assignCandidates={assignCandidates}
         swapCandidates={swapCandidates}
         onOpenChange={(open) => {
-          if (!open) setSwapTarget(null);
+          if (!open) {
+            setSwapTarget(null);
+            setAddRoleTarget(null);
+          }
         }}
-        onAssign={handleAssignSelect}
+        onAssign={
+          addRoleTarget ? handleAddRoleSelect : handleAssignSelect
+        }
         onSwap={handleSwapSelect}
       />
 
@@ -331,6 +374,7 @@ function RemoveEmployeeDialog({
 function EmployeePickerDialog({
   open,
   mode,
+  roleName,
   sourceEmployee,
   assignCandidates,
   swapCandidates,
@@ -339,7 +383,8 @@ function EmployeePickerDialog({
   onSwap,
 }: {
   open: boolean;
-  mode: "assign" | "swap";
+  mode: "assign" | "swap" | "add";
+  roleName?: string;
   sourceEmployee: string;
   assignCandidates: EmployeeOption[];
   swapCandidates: ShiftListing[];
@@ -347,7 +392,7 @@ function EmployeePickerDialog({
   onAssign: (candidate: EmployeeOption) => void;
   onSwap: (candidate: ShiftListing) => void;
 }) {
-  const isAssigning = mode === "assign";
+  const isAssigning = mode === "assign" || mode === "add";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -355,12 +400,18 @@ function EmployeePickerDialog({
         <DialogHeader>
           <div className="space-y-1">
             <DialogTitle>
-              {isAssigning ? "Assign employee" : "Swap employee"}
+              {mode === "add"
+                ? "Add employee to shift"
+                : isAssigning
+                  ? "Assign employee"
+                  : "Swap employee"}
             </DialogTitle>
             <DialogDescription>
-              {isAssigning
-                ? "Choose an employee to assign to this shift."
-                : `Choose another shift on the same day and meal period to swap with ${sourceEmployee || "this employee"}.`}
+              {mode === "add"
+                ? `Choose an employee to add to ${roleName || "this role"}.`
+                : isAssigning
+                  ? "Choose an employee to assign to this shift."
+                  : `Choose another shift on the same day and meal period to swap with ${sourceEmployee || "this employee"}.`}
             </DialogDescription>
           </div>
         </DialogHeader>

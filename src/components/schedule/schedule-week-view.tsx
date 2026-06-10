@@ -13,7 +13,7 @@ import { cn, DAY_LABELS, DAYS, type DayKey } from "@/lib/utils";
 import type { MealPeriodBlock, ScheduleData } from "@/lib/types";
 
 type RowItem =
-  | { kind: "role"; role: string }
+  | { kind: "role"; role: string; day: DayKey; period: "AM" | "PM" }
   | { kind: "shift"; employee: string; timeRange: string; ref: ShiftRef };
 
 interface CombinedRow {
@@ -42,7 +42,12 @@ function flattenMealPeriod(day: DayKey, block: MealPeriodBlock): RowItem[] {
 
   for (const roleBlock of normalizedBlock.roles) {
     if (roleBlock.shifts.length === 0) continue;
-    items.push({ kind: "role", role: roleBlock.role });
+    items.push({
+      kind: "role",
+      role: roleBlock.role,
+      day,
+      period: normalizedBlock.period,
+    });
     roleBlock.shifts.forEach((shift, shiftIndex) => {
       items.push({
         kind: "shift",
@@ -98,8 +103,27 @@ function SideCells({
   }
 
   if (item.kind === "role") {
+    const canEdit = editable && actions;
+
     return (
-      <td className={ROLE_HEADER} colSpan={4} title={item.role}>
+      <td
+        className={cn(
+          ROLE_HEADER,
+          canEdit && "cursor-context-menu hover:bg-[#6e6e6e]",
+        )}
+        colSpan={4}
+        title={item.role}
+        onContextMenu={
+          canEdit
+            ? (event) =>
+                actions.openRoleMenu(event, {
+                  day: item.day,
+                  period: item.period,
+                  role: item.role,
+                })
+            : undefined
+        }
+      >
         {item.role}
       </td>
     );
