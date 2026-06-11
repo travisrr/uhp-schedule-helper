@@ -9,6 +9,7 @@ import {
   useScheduleShiftActions,
 } from "@/components/schedule/schedule-shift-actions";
 import type { ShiftRef } from "@/lib/schedule-mutations";
+import { DayLockToggle } from "@/components/ui/day-lock-toggle";
 import {
   isScheduleDayLocked,
   setScheduleDayLocked,
@@ -181,7 +182,7 @@ function SideCells({
   );
 }
 
-function DayLockToggle({
+function ScheduleDayLockToggle({
   day,
   locked,
 }: {
@@ -191,38 +192,15 @@ function DayLockToggle({
   const { setSchedule } = useAppData();
 
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={locked}
-      aria-label={
-        locked
-          ? "Day locked — click to unlock"
-          : "Set and lock this day"
-      }
-      title={
-        locked
-          ? "Locked — this day will not change when you regenerate or apply shift hours"
-          : "Set and lock — freeze this day against bulk updates"
-      }
-      onClick={() => {
+    <DayLockToggle
+      state={locked ? "locked" : "unlocked"}
+      onToggle={() => {
         setSchedule((previous) => {
           if (!previous) return previous;
           return setScheduleDayLocked(previous, day, !locked);
         });
       }}
-      className={cn(
-        "relative inline-flex h-3.5 w-7 shrink-0 items-center rounded-full border border-black/15 transition-colors",
-        locked ? "bg-emerald-500" : "bg-yellow-400",
-      )}
-    >
-      <span
-        className={cn(
-          "pointer-events-none inline-block size-2 rounded-full bg-white shadow-sm transition-transform",
-          locked ? "translate-x-3.5" : "translate-x-0.5",
-        )}
-      />
-    </button>
+    />
   );
 }
 
@@ -255,7 +233,7 @@ function DaySection({
           <div className="flex items-center justify-between gap-3">
             <span>{dateLabel}</span>
             {showLockToggle ? (
-              <DayLockToggle day={day} locked={locked} />
+              <ScheduleDayLockToggle day={day} locked={locked} />
             ) : locked ? (
               <span
                 className="inline-block size-2 shrink-0 rounded-full bg-emerald-500"
@@ -315,13 +293,11 @@ function ScheduleWeekTable({
   schedule,
   editable,
   showWeeklyStats,
-  useLiveStats,
   showLockToggle,
 }: {
   schedule: ScheduleData;
   editable: boolean;
   showWeeklyStats: boolean;
-  useLiveStats: boolean;
   showLockToggle: boolean;
 }) {
   const orderedDays = DAYS.map((dayKey) =>
@@ -389,7 +365,6 @@ function ScheduleWeekTable({
         <ScheduleEmployeeStatsPanel
           className="no-print w-full min-w-[260px] flex-[1_1_280px] min-[1500px]:sticky min-[1500px]:top-4 min-[1500px]:max-w-[320px]"
           schedule={schedule}
-          useLiveSchedule={useLiveStats}
         />
       </div>
     </div>
@@ -407,6 +382,7 @@ function applyWeekDateLabels(
   const days = schedule.days.map((day) => ({
     ...day,
     dateLabel: labels[day.day],
+    mealPeriods: structuredClone(day.mealPeriods),
   }));
 
   return {
@@ -482,7 +458,6 @@ export function ScheduleWeekView({
         schedule={schedule}
         editable={false}
         showWeeklyStats={showWeeklyStats}
-        useLiveStats={scheduleProp == null}
         showLockToggle={false}
       />
     );
@@ -497,7 +472,6 @@ export function ScheduleWeekView({
         schedule={schedule}
         editable
         showWeeklyStats={showWeeklyStats}
-        useLiveStats={scheduleProp == null}
         showLockToggle
       />
     </ScheduleShiftActionProvider>

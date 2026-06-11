@@ -15,11 +15,13 @@ import {
   applySelectiveAvailabilityUpload,
   computeAvailabilityDiff,
 } from "@/lib/availability-diff";
+import { mergeAvailabilityPreservingLockedDays } from "@/lib/availability-day-lock";
 import { readFileAsNamedSheets } from "@/lib/file-ingest";
 import { parseAvailabilityWorkbook } from "@/lib/parsers/availability-parser";
 import { parseScheduleSheet } from "@/lib/parsers/schedule-parser";
 import { completeFileUpload } from "@/lib/storage-sync";
 import type { AvailabilityData } from "@/lib/types";
+import { DAYS } from "@/lib/utils";
 
 export function SettingsPageContent() {
   const {
@@ -58,9 +60,12 @@ export function SettingsPageContent() {
   } | null>(null);
 
   function reportAvailabilityUpload(fileName: string, data: AvailabilityData) {
+    const protectedDays = DAYS.filter((day) => data.uploadProtectedDays?.[day]);
     setAvailabilityFile(fileName);
     setSuccess(
-      `Availability loaded: ${data.employees.length} roster rows from all workbook tabs.`,
+      protectedDays.length > 0
+        ? `Availability loaded: ${data.employees.length} roster rows. Kept locked values for ${protectedDays.join(", ")}.`
+        : `Availability loaded: ${data.employees.length} roster rows from all workbook tabs.`,
     );
     setError(null);
   }
@@ -92,15 +97,19 @@ export function SettingsPageContent() {
                 return;
               }
 
+              const merged = mergeAvailabilityPreservingLockedDays(
+                availability,
+                data,
+              );
               void completeFileUpload({
                 kind: "availability",
                 file,
                 fileName,
-                statePatch: { availability: data },
+                statePatch: { availability: merged },
                 current: currentState,
                 manifest,
                 applyPersistedState,
-              }).then(() => reportAvailabilityUpload(fileName, data));
+              }).then(() => reportAvailabilityUpload(fileName, merged));
             }}
             onError={(message) => {
               setError(message);
@@ -184,10 +193,13 @@ export function SettingsPageContent() {
             )}
             onApply={(acceptedKeys) => {
               const { file, fileName, data } = pendingAvailabilityUpload;
-              const merged = applySelectiveAvailabilityUpload(
+              const merged = mergeAvailabilityPreservingLockedDays(
                 availability,
-                data,
-                acceptedKeys,
+                applySelectiveAvailabilityUpload(
+                  availability,
+                  data,
+                  acceptedKeys,
+                ),
               );
               setPendingAvailabilityUpload(null);
               void completeFileUpload({

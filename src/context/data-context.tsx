@@ -21,6 +21,7 @@ import type {
   ServerMetricsData,
   StoredManifest,
 } from "@/lib/types";
+import { setAvailabilityDayLocked } from "@/lib/availability-day-lock";
 import type { DayKey } from "@/lib/utils";
 import { normalizeScheduleAssignments } from "@/lib/schedule-management-roles";
 import {
@@ -60,6 +61,7 @@ interface AppDataContextValue extends AppDataState {
     day: DayKey,
     status: AvailabilityStatusOption,
   ) => void;
+  setAvailabilityDayLocked: (day: DayKey, locked: boolean) => void;
   clearAvailability: () => void;
   clearSchedule: () => void;
   clearPriorSchedule: () => void;
@@ -190,9 +192,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const addAvailabilityEmployee = useCallback((employee: EmployeeAvailability) => {
     setState((prev) => ({
       ...prev,
-      availability: {
-        employees: [...(prev.availability?.employees ?? []), employee],
-      },
+      availability: prev.availability
+        ? {
+            ...prev.availability,
+            employees: [...prev.availability.employees, employee],
+          }
+        : { employees: [employee] },
     }));
   }, []);
 
@@ -202,7 +207,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const employees = prev.availability.employees.filter((_, i) => i !== index);
       return {
         ...prev,
-        availability: employees.length > 0 ? { employees } : null,
+        availability:
+          employees.length > 0
+            ? { ...prev.availability, employees }
+            : null,
       };
     });
   }, []);
@@ -211,6 +219,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     (employeeIndex: number, day: DayKey, status: AvailabilityStatusOption) => {
       setState((prev) => {
         if (!prev.availability) return prev;
+        if (prev.availability.lockedDays?.[day]) return prev;
         const employee = prev.availability.employees[employeeIndex];
         if (!employee) return prev;
 
@@ -226,9 +235,29 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
             : entry,
         );
 
+        const uploadProtectedDays = { ...prev.availability.uploadProtectedDays };
+        delete uploadProtectedDays[day];
+
         return {
           ...prev,
-          availability: { employees },
+          availability: {
+            ...prev.availability,
+            employees,
+            uploadProtectedDays,
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const setAvailabilityDayLockedState = useCallback(
+    (day: DayKey, locked: boolean) => {
+      setState((prev) => {
+        if (!prev.availability) return prev;
+        return {
+          ...prev,
+          availability: setAvailabilityDayLocked(prev.availability, day, locked),
         };
       });
     },
@@ -282,6 +311,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       addAvailabilityEmployee,
       removeAvailabilityEmployee,
       updateAvailabilityStatus,
+      setAvailabilityDayLocked: setAvailabilityDayLockedState,
       clearAvailability,
       clearSchedule,
       clearPriorSchedule,
@@ -302,6 +332,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       addAvailabilityEmployee,
       removeAvailabilityEmployee,
       updateAvailabilityStatus,
+      setAvailabilityDayLockedState,
       clearAvailability,
       clearSchedule,
       clearPriorSchedule,

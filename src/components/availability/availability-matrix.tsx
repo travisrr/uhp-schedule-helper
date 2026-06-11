@@ -11,6 +11,11 @@ import {
   normalizeAvailabilityStatus,
   type AvailabilityStatusOption,
 } from "@/lib/availability-utils";
+import { DayLockToggle } from "@/components/ui/day-lock-toggle";
+import {
+  getAvailabilityDayLockToggleState,
+  isAvailabilityDayLocked,
+} from "@/lib/availability-day-lock";
 import type { EmployeeAvailability } from "@/lib/types";
 import { cn, DAYS, type DayKey } from "@/lib/utils";
 import { Trash2 } from "lucide-react";
@@ -19,7 +24,10 @@ import { useEffect, useState } from "react";
 const cellBorder =
   "border border-[#d4d4d4] dark:border-zinc-700";
 const headerClass = `${cellBorder} bg-[#e8e8e8] px-2 py-1.5 text-left text-sm font-bold text-black dark:bg-zinc-800 dark:text-zinc-100`;
+const stickyHeaderClass = `${headerClass} sticky top-0 z-20`;
+const stickyCornerHeaderClass = `${headerClass} sticky left-0 top-0 z-30 shadow-[2px_2px_4px_-2px_rgba(0,0,0,0.12)] dark:shadow-[2px_2px_4px_-2px_rgba(0,0,0,0.4)]`;
 const bodyClass = `${cellBorder} px-2 py-1 text-left text-sm text-black dark:text-zinc-100`;
+const stickyRowHeaderClass = `${bodyClass} sticky left-0 z-10 bg-white dark:bg-zinc-950 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.12)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]`;
 const interactiveCellClass =
   "cursor-context-menu hover:ring-1 hover:ring-inset hover:ring-zinc-400/60 dark:hover:ring-zinc-500/60";
 
@@ -79,6 +87,7 @@ export function AvailabilityMatrix() {
     availability,
     hydrated,
     removeAvailabilityEmployee,
+    setAvailabilityDayLocked,
     updateAvailabilityStatus,
   } = useAppData();
   const [menu, setMenu] = useState<ContextMenuTarget | null>(null);
@@ -122,6 +131,9 @@ export function AvailabilityMatrix() {
   }
 
   const rows = groupByRole(availability.employees);
+  const hasUploadProtectedDays = DAYS.some(
+    (day) => availability.uploadProtectedDays?.[day],
+  );
 
   function openStatusMenu(
     event: React.MouseEvent,
@@ -149,14 +161,31 @@ export function AvailabilityMatrix() {
   return (
     <>
       <div className="overflow-auto rounded-sm border border-[#d4d4d4] bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-950">
-        <table className="w-full min-w-[900px] border-collapse text-sm">
+        {hasUploadProtectedDays ? (
+          <p className="border-b border-[#d4d4d4] px-3 py-2 text-xs text-sky-800 dark:border-zinc-700 dark:text-sky-300">
+            Blue toggles kept your locked days when the latest availability upload
+            tried to change them.
+          </p>
+        ) : null}
+        <table className="w-full min-w-[900px] border-separate border-spacing-0 text-sm">
           <thead>
             <tr>
-              <th className={headerClass}>Employee</th>
-              <th className={headerClass}>Role</th>
+              <th className={stickyCornerHeaderClass}>Employee</th>
+              <th className={stickyHeaderClass}>Role</th>
               {DAYS.map((day) => (
-                <th key={day} className={headerClass}>
-                  {day}
+                <th key={day} className={stickyHeaderClass}>
+                  <div className="flex flex-col items-center gap-1">
+                    <span>{day}</span>
+                    <DayLockToggle
+                      state={getAvailabilityDayLockToggleState(availability, day)}
+                      onToggle={() =>
+                        setAvailabilityDayLocked(
+                          day,
+                          !isAvailabilityDayLocked(availability, day),
+                        )
+                      }
+                    />
+                  </div>
                 </th>
               ))}
             </tr>
@@ -164,7 +193,7 @@ export function AvailabilityMatrix() {
           <tbody>
             {rows.map((employee, index) => (
               <tr key={`${employee.employee}-${employee.role}-${employee.sourceIndex}-${index}`}>
-                <td className={`${bodyClass} bg-white dark:bg-zinc-950`}>
+                <td className={stickyRowHeaderClass}>
                   <div className="flex items-center gap-1">
                     <Button
                       type="button"
@@ -182,28 +211,43 @@ export function AvailabilityMatrix() {
                 <td className={`${bodyClass} bg-white dark:bg-zinc-950`}>
                   {getEmployeeRole(employee) || "—"}
                 </td>
-                {DAYS.map((day) => (
-                  <td
-                    key={day}
-                    className={cn(
-                      cellBorder,
-                      "px-2 py-1 text-left text-sm text-black dark:text-zinc-100",
-                      getAvailabilityCellClass(employee.days[day]),
-                      interactiveCellClass,
-                    )}
-                    title="Right-click to change availability"
-                    onContextMenu={(event) =>
-                      openStatusMenu(
-                        event,
-                        employee.sourceIndex,
-                        day,
-                        employee.days[day],
-                      )
-                    }
-                  >
-                    {formatAvailabilityLabel(employee.days[day])}
-                  </td>
-                ))}
+                {DAYS.map((day) => {
+                  const dayLocked = isAvailabilityDayLocked(availability, day);
+
+                  return (
+                    <td
+                      key={day}
+                      className={cn(
+                        cellBorder,
+                        "px-2 py-1 text-left text-sm text-black dark:text-zinc-100",
+                        getAvailabilityCellClass(employee.days[day]),
+                        dayLocked
+                          ? availability.uploadProtectedDays?.[day]
+                            ? "ring-1 ring-inset ring-sky-500/35"
+                            : "ring-1 ring-inset ring-emerald-500/25"
+                          : interactiveCellClass,
+                      )}
+                      title={
+                        dayLocked
+                          ? "Day locked — unlock the column toggle to edit"
+                          : "Right-click to change availability"
+                      }
+                      onContextMenu={
+                        dayLocked
+                          ? undefined
+                          : (event) =>
+                              openStatusMenu(
+                                event,
+                                employee.sourceIndex,
+                                day,
+                                employee.days[day],
+                              )
+                      }
+                    >
+                      {formatAvailabilityLabel(employee.days[day])}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>

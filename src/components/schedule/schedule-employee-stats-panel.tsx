@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { useAppData } from "@/context/data-context";
 import {
   computeEmployeeWeeklyStats,
   formatWeeklyHours,
@@ -18,31 +17,22 @@ const NAME_CELL = `${CELL} max-w-0 overflow-hidden text-ellipsis whitespace-nowr
 const VALUE_CELL = `${CELL} whitespace-nowrap px-2 py-1 text-center tabular-nums`;
 
 interface ScheduleEmployeeStatsPanelProps {
-  /** Fallback schedule when not reading live context (e.g. read-only previews). */
-  schedule?: ScheduleData | null;
-  /** When true, totals always follow the live schedule in app context. */
-  useLiveSchedule?: boolean;
+  schedule: ScheduleData | null;
   className?: string;
 }
 
 export function ScheduleEmployeeStatsPanel({
-  schedule: scheduleProp,
-  useLiveSchedule = false,
+  schedule,
   className,
 }: ScheduleEmployeeStatsPanelProps) {
-  const { schedule: contextSchedule } = useAppData();
-  const schedule = useLiveSchedule
-    ? (contextSchedule ?? scheduleProp ?? null)
-    : (scheduleProp ?? null);
+  const assignmentKey = schedule
+    ? scheduleAssignmentFingerprint(schedule)
+    : "empty";
 
   const stats = useMemo(
     () => (schedule ? computeEmployeeWeeklyStats(schedule) : []),
-    [schedule],
+    [schedule, assignmentKey],
   );
-
-  const statsKey = schedule
-    ? scheduleAssignmentFingerprint(schedule)
-    : "empty";
 
   if (stats.length === 0) {
     return null;
@@ -83,7 +73,7 @@ export function ScheduleEmployeeStatsPanel({
             </th>
           </tr>
         </thead>
-        <tbody key={statsKey}>
+        <tbody key={assignmentKey}>
           {stats.map((entry) => (
             <tr key={entry.employee}>
               <td className={NAME_CELL} title={entry.employee}>

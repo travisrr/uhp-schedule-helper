@@ -17,6 +17,10 @@ export interface EmployeeAvailability {
 
 export interface AvailabilityData {
   employees: EmployeeAvailability[];
+  /** Locked day columns are preserved when a new availability sheet is uploaded. */
+  lockedDays?: Partial<Record<DayKey, boolean>>;
+  /** Days where the latest upload kept locked values instead of incoming sheet data. */
+  uploadProtectedDays?: Partial<Record<DayKey, boolean>>;
 }
 
 export interface ShiftAssignment {
