@@ -13,6 +13,7 @@ import {
   parseISODateString,
   toISODateString,
 } from "@/lib/week-utils";
+import { ScheduleMetricsCards } from "@/components/schedule/schedule-metrics-ribbon";
 import { cn } from "@/lib/utils";
 
 export function ScheduleWeekSelector() {
@@ -166,15 +167,18 @@ export function ScheduleWeekSelector() {
           )}
         </div>
 
-        <Button
-          type="button"
-          onClick={handleGenerateSchedule}
-          disabled={!canGenerate}
-          className="shrink-0"
-        >
-          <Sparkles className="size-4" />
-          Generate Schedule
-        </Button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+          <ScheduleMetricsCards />
+          <Button
+            type="button"
+            onClick={handleGenerateSchedule}
+            disabled={!canGenerate}
+            className="shrink-0"
+          >
+            <Sparkles className="size-4" />
+            Generate Schedule
+          </Button>
+        </div>
       </div>
 
       {statusMessage ? (

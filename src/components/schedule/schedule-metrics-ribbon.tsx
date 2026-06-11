@@ -41,15 +41,6 @@ function MetricCard({
   );
 }
 
-function BlankMetricCard() {
-  return (
-    <div
-      aria-hidden
-      className="min-w-[180px] flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950"
-    />
-  );
-}
-
 function formatHours(value: number | null): string {
   if (value === null) return "—";
   return `${value.toFixed(1)} hrs`;
@@ -84,12 +75,12 @@ function ShiftsValue({
   );
 }
 
-export function ScheduleMetricsRibbon() {
+export function ScheduleMetricsCards({ className }: { className?: string }) {
   const { schedule } = useAppData();
   const metrics = schedule ? computeScheduleRibbonMetrics(schedule) : null;
 
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <div className={cn("flex flex-wrap gap-3", className)}>
       <MetricCard
         label="Total # Shifts"
         value={
@@ -107,8 +98,6 @@ export function ScheduleMetricsRibbon() {
         icon={Clock}
         accent="emerald"
       />
-      <BlankMetricCard />
-      <BlankMetricCard />
     </div>
   );
 }
