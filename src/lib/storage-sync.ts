@@ -120,8 +120,51 @@ export async function fetchPersistedState(): Promise<PersistedAppState | null> {
   }
 }
 
+export type PersistedStateSave = Partial<AppDataState> & {
+  manifest?: Partial<StoredManifest>;
+};
+
+export type UploadKind =
+  | "availability"
+  | "schedule"
+  | "prior-schedule"
+  | "server-metrics";
+
+const UPLOAD_MANIFEST_FIELD: Record<
+  UploadKind,
+  keyof Pick<
+    StoredManifest,
+    | "availabilityFile"
+    | "scheduleFile"
+    | "priorScheduleFile"
+    | "serverMetricsFile"
+  >
+> = {
+  availability: "availabilityFile",
+  schedule: "scheduleFile",
+  "prior-schedule": "priorScheduleFile",
+  "server-metrics": "serverMetricsFile",
+};
+
+export function buildPersistedSnapshot(
+  current: AppDataState,
+  manifest: StoredManifest,
+  statePatch: Partial<AppDataState>,
+  manifestPatch?: Partial<StoredManifest>,
+): PersistedAppState {
+  return {
+    ...current,
+    ...statePatch,
+    manifest: {
+      ...manifest,
+      ...manifestPatch,
+      updatedAt: new Date().toISOString(),
+    },
+  };
+}
+
 export async function savePersistedStatePatch(
-  patch: Partial<AppDataState>,
+  patch: PersistedStateSave,
 ): Promise<void> {
   try {
     await fetch("/api/storage", {
@@ -133,6 +176,37 @@ export async function savePersistedStatePatch(
   } catch {
     // Repo storage is best-effort; localStorage remains the offline fallback.
   }
+}
+
+export async function completeFileUpload(options: {
+  kind: UploadKind;
+  file: File;
+  fileName: string;
+  statePatch: Partial<AppDataState>;
+  current: AppDataState;
+  manifest: StoredManifest;
+  applyPersistedState: (state: PersistedAppState) => void;
+}): Promise<void> {
+  const manifestField = UPLOAD_MANIFEST_FIELD[options.kind];
+  const optimistic = buildPersistedSnapshot(
+    options.current,
+    options.manifest,
+    options.statePatch,
+    { [manifestField]: options.fileName },
+  );
+
+  options.applyPersistedState(optimistic);
+
+  const persisted = await uploadPersistedFile(options.kind, options.file);
+  if (persisted) {
+    options.applyPersistedState(persisted);
+    return;
+  }
+
+  await savePersistedStatePatch({
+    ...options.statePatch,
+    manifest: { [manifestField]: options.fileName },
+  });
 }
 
 export async function clearPersistedState(): Promise<void> {

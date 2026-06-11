@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAppData } from "@/context/data-context";
 import { parseScheduleSheet } from "@/lib/parsers/schedule-parser";
-import { uploadPersistedFile } from "@/lib/storage-sync";
+import { completeFileUpload } from "@/lib/storage-sync";
 import {
   formatWeekRange,
   parseISODateString,
@@ -45,8 +45,26 @@ function countAssignedShifts(schedule: { days: { mealPeriods: { roles: { shifts:
 }
 
 export function PriorSchedulePageContent() {
-  const { priorSchedule, setPriorSchedule, clearPriorSchedule, clearSchedule } =
-    useAppData();
+  const {
+    priorSchedule,
+    applyPersistedState,
+    clearPriorSchedule,
+    availability,
+    schedule,
+    serverMetrics,
+    selectedWeekStart,
+    shiftHours,
+    manifest,
+  } = useAppData();
+
+  const currentState = {
+    availability,
+    schedule,
+    priorSchedule,
+    serverMetrics,
+    selectedWeekStart,
+    shiftHours,
+  };
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,17 +107,28 @@ export function PriorSchedulePageContent() {
           parse={parseScheduleSheet}
           lastUploaded={priorSchedule?.fileName ?? null}
           onSuccess={(fileName, data, file) => {
-            setPriorSchedule({
+            const priorScheduleUpload = {
               schedule: data,
               fileName,
               importedAt: new Date().toISOString(),
+            };
+            void completeFileUpload({
+              kind: "prior-schedule",
+              file,
+              fileName,
+              statePatch: {
+                priorSchedule: priorScheduleUpload,
+                schedule: null,
+              },
+              current: currentState,
+              manifest,
+              applyPersistedState,
+            }).then(() => {
+              setSuccess(
+                `Prior schedule loaded: ${countActiveDays(data)} active days, ${countAssignedShifts(data)} shift assignments. Re-generate on Shift Report to apply.`,
+              );
+              setError(null);
             });
-            clearSchedule();
-            setSuccess(
-              `Prior schedule loaded: ${countActiveDays(data)} active days, ${countAssignedShifts(data)} shift assignments. Re-generate on Shift Report to apply.`,
-            );
-            setError(null);
-            void uploadPersistedFile("prior-schedule", file);
           }}
           onError={(message) => {
             setError(message);

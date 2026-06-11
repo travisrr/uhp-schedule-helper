@@ -4,7 +4,11 @@ import {
   persistAppStatePatch,
   readPersistedState,
 } from "@/lib/server/app-storage";
-import type { AppDataState } from "@/lib/types";
+import type { AppDataState, StoredManifest } from "@/lib/types";
+
+type PersistedStateSave = Partial<AppDataState> & {
+  manifest?: Partial<StoredManifest>;
+};
 
 export async function GET() {
   const state = await readPersistedState();
@@ -13,7 +17,7 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const patch = (await request.json()) as Partial<AppDataState>;
+    const patch = (await request.json()) as PersistedStateSave;
     const state = await persistAppStatePatch(patch);
     return NextResponse.json(state);
   } catch (error) {

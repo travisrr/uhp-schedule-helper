@@ -134,7 +134,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 UHP Schedule
               </p>
-              <p className="truncate text-[11px] text-zinc-500">
+              <p className="truncate text-[11px] text-black dark:text-zinc-300">
                 Hospitality Ops
               </p>
             </div>
@@ -166,12 +166,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             variant="ghost"
             title={collapsed ? "Add Employee" : undefined}
             className={cn(
-              "w-full justify-start px-3 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:text-zinc-100",
+              "w-full justify-start px-3 text-black hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-900/60",
               collapsed && "justify-center px-0",
             )}
             onClick={() => setAddEmployeeOpen(true)}
           >
-            <UserPlus className="h-4 w-4 shrink-0 text-zinc-500" />
+            <UserPlus className="h-4 w-4 shrink-0 text-black dark:text-zinc-200" />
             {!collapsed ? <span className="truncate">Add Employee</span> : null}
           </Button>
           <Separator />
@@ -188,13 +188,13 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                   active
                     ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100"
-                    : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:text-zinc-100",
+                    : "text-black hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-900/60",
                 )}
               >
                 <Icon
                   className={cn(
                     "h-4 w-4 shrink-0",
-                    active ? "text-emerald-400" : "text-zinc-500",
+                    active ? "text-emerald-500" : "text-black dark:text-zinc-200",
                   )}
                 />
                 {!collapsed ? <span className="truncate">{item.label}</span> : null}
@@ -206,7 +206,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         <div className="space-y-2 border-t border-zinc-200 p-2 dark:border-zinc-800">
           <ThemeToggle collapsed={collapsed} />
           {!collapsed ? (
-            <p className="px-1 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-600">
+            <p className="px-1 text-[11px] leading-relaxed text-black dark:text-zinc-300">
               Import availability in Settings and a prior schedule to seed future weeks.
             </p>
           ) : null}

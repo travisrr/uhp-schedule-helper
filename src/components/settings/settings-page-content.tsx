@@ -18,19 +18,30 @@ import {
 import { readFileAsNamedSheets } from "@/lib/file-ingest";
 import { parseAvailabilityWorkbook } from "@/lib/parsers/availability-parser";
 import { parseScheduleSheet } from "@/lib/parsers/schedule-parser";
-import { uploadPersistedFile } from "@/lib/storage-sync";
+import { completeFileUpload } from "@/lib/storage-sync";
 import type { AvailabilityData } from "@/lib/types";
 
 export function SettingsPageContent() {
   const {
     applyPersistedState,
-    setAvailability,
-    setSchedule,
     clearAll,
     availability,
     schedule,
     manifest,
+    priorSchedule,
+    serverMetrics,
+    selectedWeekStart,
+    shiftHours,
   } = useAppData();
+
+  const currentState = {
+    availability,
+    schedule,
+    priorSchedule,
+    serverMetrics,
+    selectedWeekStart,
+    shiftHours,
+  };
 
   const [availabilityFile, setAvailabilityFile] = useState<string | null>(
     manifest.availabilityFile,
@@ -41,12 +52,12 @@ export function SettingsPageContent() {
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingAvailabilityUpload, setPendingAvailabilityUpload] = useState<{
+    file: File;
     fileName: string;
     data: AvailabilityData;
   } | null>(null);
 
-  function applyAvailabilityUpload(fileName: string, data: AvailabilityData) {
-    setAvailability(data);
+  function reportAvailabilityUpload(fileName: string, data: AvailabilityData) {
     setAvailabilityFile(fileName);
     setSuccess(
       `Availability loaded: ${data.employees.length} roster rows from all workbook tabs.`,
@@ -75,16 +86,21 @@ export function SettingsPageContent() {
             onSuccess={(fileName, data, file) => {
               const diff = computeAvailabilityDiff(availability, data);
               if (diff.needsReview) {
-                setPendingAvailabilityUpload({ fileName, data });
+                setPendingAvailabilityUpload({ file, fileName, data });
                 setSuccess(null);
                 setError(null);
                 return;
               }
 
-              applyAvailabilityUpload(fileName, data);
-              void uploadPersistedFile("availability", file).then((persisted) => {
-                if (persisted) applyPersistedState(persisted);
-              });
+              void completeFileUpload({
+                kind: "availability",
+                file,
+                fileName,
+                statePatch: { availability: data },
+                current: currentState,
+                manifest,
+                applyPersistedState,
+              }).then(() => reportAvailabilityUpload(fileName, data));
             }}
             onError={(message) => {
               setError(message);
@@ -98,14 +114,20 @@ export function SettingsPageContent() {
             parse={parseScheduleSheet}
             lastUploaded={scheduleFile}
             onSuccess={(fileName, data, file) => {
-              setSchedule(data);
-              setScheduleFile(fileName);
-              setSuccess(
-                `Schedule loaded: ${data.days.filter((day) => day.mealPeriods.some((period) => period.roles.some((role) => role.shifts.length > 0))).length} active days parsed.`,
-              );
-              setError(null);
-              void uploadPersistedFile("schedule", file).then((persisted) => {
-                if (persisted) applyPersistedState(persisted);
+              void completeFileUpload({
+                kind: "schedule",
+                file,
+                fileName,
+                statePatch: { schedule: data },
+                current: currentState,
+                manifest,
+                applyPersistedState,
+              }).then(() => {
+                setScheduleFile(fileName);
+                setSuccess(
+                  `Schedule loaded: ${data.days.filter((day) => day.mealPeriods.some((period) => period.roles.some((role) => role.shifts.length > 0))).length} active days parsed.`,
+                );
+                setError(null);
               });
             }}
             onError={(message) => {
@@ -161,14 +183,22 @@ export function SettingsPageContent() {
               pendingAvailabilityUpload.data,
             )}
             onApply={(acceptedKeys) => {
-              const { fileName, data } = pendingAvailabilityUpload;
+              const { file, fileName, data } = pendingAvailabilityUpload;
               const merged = applySelectiveAvailabilityUpload(
                 availability,
                 data,
                 acceptedKeys,
               );
-              applyAvailabilityUpload(fileName, merged);
               setPendingAvailabilityUpload(null);
+              void completeFileUpload({
+                kind: "availability",
+                file,
+                fileName,
+                statePatch: { availability: merged },
+                current: currentState,
+                manifest,
+                applyPersistedState,
+              }).then(() => reportAvailabilityUpload(fileName, merged));
             }}
             onReject={() => {
               setPendingAvailabilityUpload(null);

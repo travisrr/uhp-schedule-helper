@@ -82,7 +82,7 @@ function DialogDescription({
 }: React.ComponentProps<typeof DialogPrimitive.Description>) {
   return (
     <DialogPrimitive.Description
-      className={cn("text-sm text-zinc-500", className)}
+      className={cn("text-sm text-black dark:text-zinc-200", className)}
       {...props}
     />
   );

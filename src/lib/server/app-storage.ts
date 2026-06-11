@@ -7,7 +7,6 @@ import {
   type ShiftHoursSettings,
 } from "@/lib/shift-hours";
 import type {
-  AppDataState,
   AvailabilityData,
   PersistedAppState,
   PriorSchedule,
@@ -184,12 +183,17 @@ export async function persistServerMetricsUpload(
 }
 
 export async function persistAppStatePatch(
-  patch: Partial<AppDataState>,
+  patch: PersistedStatePatch,
 ): Promise<PersistedAppState> {
   const existing = await readPersistedState();
+  const { manifest, ...statePatch } = patch;
+
   return writePersistedState({
     ...existing,
-    ...patch,
+    ...statePatch,
+    ...(manifest
+      ? { manifest: { ...existing.manifest, ...manifest } }
+      : {}),
   });
 }
 

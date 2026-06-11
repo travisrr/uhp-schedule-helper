@@ -147,8 +147,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, [hydrated]);
 
   const applyPersistedState = useCallback((persisted: PersistedAppState) => {
-    setState(toAppDataState(persisted));
+    const nextState = toAppDataState(persisted);
+    setState(nextState);
     setManifest(persisted.manifest);
+    saveLocalSnapshot(nextState, persisted.manifest);
   }, []);
 
   const setAvailability = useCallback((availability: AvailabilityData | null) => {
@@ -251,11 +253,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearAll = useCallback(() => {
+    const nextState = createEmptyState();
+    const nextManifest = createEmptyManifest();
     setState((prev) => ({
-      ...createEmptyState(),
+      ...nextState,
       shiftHours: prev.shiftHours,
     }));
-    setManifest(createEmptyManifest());
+    setManifest(nextManifest);
+    saveLocalSnapshot(
+      { ...nextState, shiftHours: stateRef.current.shiftHours },
+      nextManifest,
+    );
     void clearPersistedState();
   }, []);
 
