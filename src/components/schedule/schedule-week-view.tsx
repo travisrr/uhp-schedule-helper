@@ -212,14 +212,14 @@ function DayLockToggle({
         });
       }}
       className={cn(
-        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-black/20 transition-colors",
+        "relative inline-flex h-3.5 w-7 shrink-0 items-center rounded-full border border-black/15 transition-colors",
         locked ? "bg-emerald-500" : "bg-yellow-400",
       )}
     >
       <span
         className={cn(
-          "pointer-events-none inline-block size-5 rounded-full bg-white shadow transition-transform",
-          locked ? "translate-x-[22px]" : "translate-x-0.5",
+          "pointer-events-none inline-block size-2 rounded-full bg-white shadow-sm transition-transform",
+          locked ? "translate-x-3.5" : "translate-x-0.5",
         )}
       />
     </button>
@@ -258,7 +258,7 @@ function DaySection({
               <DayLockToggle day={day} locked={locked} />
             ) : locked ? (
               <span
-                className="inline-block size-3 shrink-0 rounded-full bg-emerald-500"
+                className="inline-block size-2 shrink-0 rounded-full bg-emerald-500"
                 title="Day locked"
                 aria-hidden
               />
