@@ -16,6 +16,7 @@ import {
 import { isEmployeeAvailableForPeriod } from "@/lib/availability-utils";
 import type {
   AvailabilityData,
+  RoleBlock,
   ScheduleData,
   ShiftAssignment,
 } from "@/lib/types";
@@ -156,6 +157,61 @@ export function listAllEmployees(
       shiftContext.period,
     ),
   }));
+}
+
+function rolesMatch(left: string, right: string): boolean {
+  return left.trim().toLowerCase() === right.trim().toLowerCase();
+}
+
+export function addRoleToPeriod(
+  schedule: ScheduleData,
+  target: RoleRef,
+  roleName: string,
+): ScheduleData {
+  const trimmedRole = roleName.trim();
+  if (!trimmedRole) return schedule;
+
+  return normalizeScheduleAssignments({
+    ...schedule,
+    days: schedule.days.map((day) => {
+      if (day.day !== target.day) return day;
+
+      const mealPeriods = [...day.mealPeriods];
+      let periodIndex = mealPeriods.findIndex(
+        (block) => block.period === target.period,
+      );
+
+      if (periodIndex < 0) {
+        mealPeriods.push({ period: target.period, roles: [] });
+        periodIndex = mealPeriods.length - 1;
+      }
+
+      const periodBlock = mealPeriods[periodIndex];
+      if (periodBlock.roles.some((roleBlock) => rolesMatch(roleBlock.role, trimmedRole))) {
+        return day;
+      }
+
+      const newRoleBlock: RoleBlock = {
+        role: trimmedRole,
+        shifts: [{ employee: "", timeRange: "" }],
+      };
+
+      const roles = [...periodBlock.roles];
+      const afterIndex = roles.findIndex((roleBlock) =>
+        rolesMatch(roleBlock.role, target.role),
+      );
+
+      if (afterIndex >= 0) {
+        roles.splice(afterIndex + 1, 0, newRoleBlock);
+      } else {
+        roles.push(newRoleBlock);
+      }
+
+      mealPeriods[periodIndex] = { ...periodBlock, roles };
+
+      return { ...day, mealPeriods };
+    }),
+  });
 }
 
 export function addShiftToRole(

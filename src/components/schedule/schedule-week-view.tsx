@@ -114,7 +114,7 @@ function SideCells({
           canEdit && "cursor-context-menu hover:bg-[#6e6e6e]",
         )}
         colSpan={4}
-        title={item.role}
+        title={canEdit ? `${item.role} — right-click for options` : item.role}
         onContextMenu={
           canEdit
             ? (event) =>

@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { ArrowLeftRight, Clock3, UserMinus, UserPlus } from "lucide-react";
+import { ArrowLeftRight, Clock3, ListPlus, UserMinus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,7 +21,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useAppData } from "@/context/data-context";
+import { listAddableRoles } from "@/lib/schedule-role-catalog";
 import {
+  addRoleToPeriod,
   addShiftToRole,
   assignShiftEmployee,
   clearShiftEmployee,
@@ -88,7 +90,8 @@ export function ScheduleShiftActionProvider({
   );
   const [timeTarget, setTimeTarget] = useState<ContextMenuTarget | null>(null);
   const [addRoleTarget, setAddRoleTarget] = useState<RoleRef | null>(null);
-  const { availability, shiftHours } = useAppData();
+  const [addNewRoleTarget, setAddNewRoleTarget] = useState<RoleRef | null>(null);
+  const { availability, priorSchedule, shiftHours } = useAppData();
 
   const isAssigning =
     swapTarget?.kind === "employee" && !swapTarget.employee.trim();
@@ -149,6 +152,19 @@ export function ScheduleShiftActionProvider({
     if (!timeTarget || timeTarget.kind !== "time") return shiftHours.am;
     return shiftHours[timeTarget.ref.period === "AM" ? "am" : "pm"];
   }, [shiftHours, timeTarget]);
+
+  const addableRoles = useMemo(() => {
+    if (!addNewRoleTarget) return [];
+    return listAddableRoles(
+      schedule,
+      availability,
+      priorSchedule?.schedule,
+      {
+        day: addNewRoleTarget.day,
+        period: addNewRoleTarget.period,
+      },
+    );
+  }, [addNewRoleTarget, availability, priorSchedule?.schedule, schedule]);
 
   const handlers = useMemo<ScheduleShiftActionHandlers>(
     () => ({
@@ -236,6 +252,14 @@ export function ScheduleShiftActionProvider({
     setAddRoleTarget(null);
   }
 
+  function handleAddNewRoleSelect(roleName: string) {
+    if (!addNewRoleTarget) return;
+    onScheduleChange((current) =>
+      current ? addRoleToPeriod(current, addNewRoleTarget, roleName) : current,
+    );
+    setAddNewRoleTarget(null);
+  }
+
   return (
     <ScheduleShiftActionContext.Provider value={handlers}>
       {children}
@@ -248,17 +272,30 @@ export function ScheduleShiftActionProvider({
           onContextMenu={(event) => event.preventDefault()}
         >
           {menu.kind === "role" ? (
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-900"
-              onClick={() => {
-                setAddRoleTarget(menu.ref);
-                setMenu(null);
-              }}
-            >
-              <UserPlus className="size-4 shrink-0 text-zinc-500" />
-              Add employee to shift
-            </button>
+            <>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-900"
+                onClick={() => {
+                  setAddRoleTarget(menu.ref);
+                  setMenu(null);
+                }}
+              >
+                <UserPlus className="size-4 shrink-0 text-zinc-500" />
+                Add employee to shift
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-900"
+                onClick={() => {
+                  setAddNewRoleTarget(menu.ref);
+                  setMenu(null);
+                }}
+              >
+                <ListPlus className="size-4 shrink-0 text-zinc-500" />
+                Add role section
+              </button>
+            </>
           ) : menu.kind === "employee" ? (
             <>
               <button
@@ -355,6 +392,17 @@ export function ScheduleShiftActionProvider({
         onConfirm={handleRemoveConfirm}
       />
 
+      <RolePickerDialog
+        open={addNewRoleTarget !== null}
+        anchorRole={addNewRoleTarget?.role}
+        period={addNewRoleTarget?.period}
+        roles={addableRoles}
+        onOpenChange={(open) => {
+          if (!open) setAddNewRoleTarget(null);
+        }}
+        onSelect={handleAddNewRoleSelect}
+      />
+
       <AdjustShiftTimeDialog
         open={timeTarget?.kind === "time"}
         initialStart={parsedTimeRange?.start ?? ""}
@@ -380,6 +428,70 @@ export function ScheduleShiftActionProvider({
         }}
       />
     </ScheduleShiftActionContext.Provider>
+  );
+}
+
+function RolePickerDialog({
+  open,
+  anchorRole,
+  period,
+  roles,
+  onOpenChange,
+  onSelect,
+}: {
+  open: boolean;
+  anchorRole?: string;
+  period?: "AM" | "PM";
+  roles: string[];
+  onOpenChange: (open: boolean) => void;
+  onSelect: (roleName: string) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <div className="space-y-1">
+            <DialogTitle>Add role section</DialogTitle>
+            <DialogDescription>
+              {anchorRole && period
+                ? `Choose a role to add after ${anchorRole} in the ${period} block.`
+                : "Choose a role to add to this meal period."}
+            </DialogDescription>
+          </div>
+        </DialogHeader>
+
+        <DialogBody>
+          {roles.length === 0 ? (
+            <p className="text-sm text-zinc-500">
+              Every known role is already in this meal period. Upload
+              availability or a prior schedule in Settings to expand the role
+              list.
+            </p>
+          ) : (
+            <div className="max-h-[min(24rem,60vh)] space-y-2 overflow-y-auto">
+              {roles.map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  className="flex w-full items-center justify-between gap-3 rounded-md border border-zinc-200 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+                  onClick={() => onSelect(role)}
+                >
+                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                    {role}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </DialogBody>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

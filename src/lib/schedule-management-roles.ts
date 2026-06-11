@@ -110,6 +110,17 @@ function isAssignedShift(shift: ShiftAssignment): boolean {
   return shift.employee.trim().length > 0;
 }
 
+function normalizeRoleShifts(roleBlock: RoleBlock): ShiftAssignment[] {
+  const assigned = roleBlock.shifts.filter(isAssignedShift);
+  if (assigned.length > 0) return assigned;
+
+  if (roleBlock.shifts.length > 0 || isFohManagementRole(roleBlock.role)) {
+    return [{ employee: "", timeRange: "" }];
+  }
+
+  return [];
+}
+
 export function normalizeScheduleAssignments(
   schedule: ScheduleData,
 ): ScheduleData {
@@ -119,19 +130,12 @@ export function normalizeScheduleAssignments(
       ...day,
       mealPeriods: day.mealPeriods.map((periodBlock) => ({
         ...periodBlock,
-        roles: periodBlock.roles.map((roleBlock) => ({
-          ...roleBlock,
-          shifts: roleBlock.shifts
-            .filter((shift) => {
-              if (isAssignedShift(shift)) return true;
-              return isFohManagementRole(roleBlock.role);
-            })
-            .map((shift) =>
-              isAssignedShift(shift)
-                ? shift
-                : { ...shift, timeRange: "" },
-            ),
-        })),
+        roles: periodBlock.roles
+          .map((roleBlock) => ({
+            ...roleBlock,
+            shifts: normalizeRoleShifts(roleBlock),
+          }))
+          .filter((roleBlock) => roleBlock.shifts.length > 0),
       })),
     })),
   };
