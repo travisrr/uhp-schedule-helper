@@ -9,6 +9,10 @@ import {
   useScheduleShiftActions,
 } from "@/components/schedule/schedule-shift-actions";
 import type { ShiftRef } from "@/lib/schedule-mutations";
+import {
+  isScheduleDayLocked,
+  setScheduleDayLocked,
+} from "@/lib/schedule-day-lock";
 import { ensureMealPeriodManagementSlot } from "@/lib/schedule-management-roles";
 import { cn, DAY_LABELS, DAYS, type DayKey } from "@/lib/utils";
 import type { MealPeriodBlock, ScheduleData } from "@/lib/types";
@@ -177,6 +181,51 @@ function SideCells({
   );
 }
 
+function DayLockToggle({
+  day,
+  locked,
+}: {
+  day: DayKey;
+  locked: boolean;
+}) {
+  const { setSchedule } = useAppData();
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={locked}
+      aria-label={
+        locked
+          ? "Day locked — click to unlock"
+          : "Set and lock this day"
+      }
+      title={
+        locked
+          ? "Locked — this day will not change when you regenerate or apply shift hours"
+          : "Set and lock — freeze this day against bulk updates"
+      }
+      onClick={() => {
+        setSchedule((previous) => {
+          if (!previous) return previous;
+          return setScheduleDayLocked(previous, day, !locked);
+        });
+      }}
+      className={cn(
+        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-black/20 transition-colors",
+        locked ? "bg-emerald-500" : "bg-yellow-400",
+      )}
+    >
+      <span
+        className={cn(
+          "pointer-events-none inline-block size-5 rounded-full bg-white shadow transition-transform",
+          locked ? "translate-x-[22px]" : "translate-x-0.5",
+        )}
+      />
+    </button>
+  );
+}
+
 function DaySection({
   day,
   dateLabel,
@@ -184,6 +233,8 @@ function DaySection({
   pmBlock,
   isFirstDay,
   editable,
+  locked,
+  showLockToggle,
 }: {
   day: DayKey;
   dateLabel: string;
@@ -191,14 +242,28 @@ function DaySection({
   pmBlock: MealPeriodBlock;
   isFirstDay: boolean;
   editable: boolean;
+  locked: boolean;
+  showLockToggle: boolean;
 }) {
   const combinedRows = buildCombinedRows(day, amBlock, pmBlock);
+  const dayEditable = editable && !locked;
 
   return (
     <>
       <tr>
         <td className={cn(DATE, isFirstDay && "pt-2")} colSpan={9}>
-          {dateLabel}
+          <div className="flex items-center justify-between gap-3">
+            <span>{dateLabel}</span>
+            {showLockToggle ? (
+              <DayLockToggle day={day} locked={locked} />
+            ) : locked ? (
+              <span
+                className="inline-block size-3 shrink-0 rounded-full bg-emerald-500"
+                title="Day locked"
+                aria-hidden
+              />
+            ) : null}
+          </div>
         </td>
       </tr>
       <tr>
@@ -223,9 +288,9 @@ function DaySection({
       </tr>
       {combinedRows.map((row, index) => (
         <tr key={index}>
-          <SideCells item={row.am} editable={editable} />
+          <SideCells item={row.am} editable={dayEditable} />
           <td className={cn(GAP, "w-4 min-w-4")} />
-          <SideCells item={row.pm} editable={editable} />
+          <SideCells item={row.pm} editable={dayEditable} />
         </tr>
       ))}
     </>
@@ -251,11 +316,13 @@ function ScheduleWeekTable({
   editable,
   showWeeklyStats,
   useLiveStats,
+  showLockToggle,
 }: {
   schedule: ScheduleData;
   editable: boolean;
   showWeeklyStats: boolean;
   useLiveStats: boolean;
+  showLockToggle: boolean;
 }) {
   const orderedDays = DAYS.map((dayKey) =>
     schedule.days.find((day) => day.day === dayKey),
@@ -295,6 +362,8 @@ function ScheduleWeekTable({
                 pmBlock={pmBlock}
                 isFirstDay={dayIndex === 0}
                 editable={editable}
+                locked={isScheduleDayLocked(day)}
+                showLockToggle={showLockToggle}
               />
             );
           })}
@@ -414,6 +483,7 @@ export function ScheduleWeekView({
         editable={false}
         showWeeklyStats={showWeeklyStats}
         useLiveStats={scheduleProp == null}
+        showLockToggle={false}
       />
     );
   }
@@ -428,6 +498,7 @@ export function ScheduleWeekView({
         editable
         showWeeklyStats={showWeeklyStats}
         useLiveStats={scheduleProp == null}
+        showLockToggle
       />
     </ScheduleShiftActionProvider>
   );

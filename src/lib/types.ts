@@ -40,6 +40,8 @@ export interface ScheduleDay {
   day: DayKey;
   dateLabel?: string | null;
   mealPeriods: MealPeriodBlock[];
+  /** When true, bulk updates (generate, shift hours) skip this day. */
+  locked?: boolean;
 }
 
 export interface ScheduleMetrics {

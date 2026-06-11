@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppData } from "@/context/data-context";
+import { mergeSchedulePreservingLockedDays } from "@/lib/schedule-day-lock";
 import { generateScheduleFromAvailability } from "@/lib/scheduler/generate-schedule";
 import {
   addDays,
@@ -80,7 +81,7 @@ export function ScheduleWeekSelector() {
       priorSchedule.schedule,
       shiftHours,
     );
-    setSchedule(result.schedule);
+    setSchedule(mergeSchedulePreservingLockedDays(schedule, result.schedule));
     setSelectedWeekStart(toISODateString(weekStart));
 
     const skipped = result.priorShiftCount - result.assignedShiftCount;

@@ -14,6 +14,7 @@ import {
   parseShiftTimeRange,
 } from "@/lib/time-format";
 import { isEmployeeAvailableForPeriod } from "@/lib/availability-utils";
+import { isScheduleDayLocked } from "@/lib/schedule-day-lock";
 import type {
   AvailabilityData,
   RoleBlock,
@@ -414,30 +415,34 @@ export function applyShiftHoursToSchedule(
 ): ScheduleData {
   return normalizeScheduleAssignments({
     ...schedule,
-    days: schedule.days.map((day) => ({
-      ...day,
-      mealPeriods: day.mealPeriods.map((periodBlock) => ({
-        ...periodBlock,
-        roles: periodBlock.roles.map((roleBlock) => ({
-          ...roleBlock,
-          shifts: roleBlock.shifts.map((shift) => {
-            if (!shift.employee.trim()) {
-              return isFohManagementRole(roleBlock.role)
-                ? { ...shift, timeRange: "", timeOverride: false }
-                : shift;
-            }
+    days: schedule.days.map((day) => {
+      if (isScheduleDayLocked(day)) return day;
 
-            if (shift.timeOverride) return shift;
+      return {
+        ...day,
+        mealPeriods: day.mealPeriods.map((periodBlock) => ({
+          ...periodBlock,
+          roles: periodBlock.roles.map((roleBlock) => ({
+            ...roleBlock,
+            shifts: roleBlock.shifts.map((shift) => {
+              if (!shift.employee.trim()) {
+                return isFohManagementRole(roleBlock.role)
+                  ? { ...shift, timeRange: "", timeOverride: false }
+                  : shift;
+              }
 
-            return {
-              ...shift,
-              timeRange: timeRangeForPeriod(periodBlock.period, shiftHours),
-              timeOverride: false,
-            };
-          }),
+              if (shift.timeOverride) return shift;
+
+              return {
+                ...shift,
+                timeRange: timeRangeForPeriod(periodBlock.period, shiftHours),
+                timeOverride: false,
+              };
+            }),
+          })),
         })),
-      })),
-    })),
+      };
+    }),
   });
 }
 
