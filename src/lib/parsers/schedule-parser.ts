@@ -25,6 +25,7 @@ const ROLE_PATTERNS = [
   "host",
   "expo",
   "busser",
+  "rbr",
   "manager",
   "prep cook",
   "sous chef",

@@ -5,6 +5,8 @@ import {
   DEFAULT_PM_MANAGEMENT_ROLE,
 } from "@/lib/schedule-management-roles";
 
+export const DEFAULT_RBR_ROLE = "RBR (Run Buss Roll)";
+
 export interface MealPeriodRef {
   day: DayKey;
   period: "AM" | "PM";
@@ -14,10 +16,28 @@ function rolesMatch(left: string, right: string): boolean {
   return left.trim().toLowerCase() === right.trim().toLowerCase();
 }
 
+function isRbrRole(role: string): boolean {
+  const base = role
+    .trim()
+    .replace(/\s*-\s*(FOH|BOH|Management)\s*$/i, "")
+    .replace(/\s*\([^)]*\)\s*$/i, "")
+    .trim()
+    .toLowerCase();
+  return base === "rbr";
+}
+
+function canonicalizeCatalogRole(role: string): string {
+  const trimmed = role.trim();
+  if (!trimmed) return trimmed;
+  if (isRbrRole(trimmed)) return DEFAULT_RBR_ROLE;
+  return trimmed;
+}
+
 /** Map availability roster labels to schedule role headers. */
 export function availabilityRoleToScheduleRole(role: string): string {
   const trimmed = role.trim();
   if (!trimmed) return trimmed;
+  if (isRbrRole(trimmed)) return DEFAULT_RBR_ROLE;
   if (/\(from schedule\)/i.test(trimmed)) return trimmed;
 
   const withoutSuffix = trimmed
@@ -99,16 +119,22 @@ export function listAddableRoles(
 
   const catalog = new Set<string>();
 
+  const periodHasRbr = listRolesInPeriod(schedule, target.day, target.period).some(
+    (role) => isRbrRole(role),
+  );
+
   for (const role of [
     ...collectRoleNamesFromSchedule(schedule),
     ...collectRoleNamesFromSchedule(priorSchedule),
     ...collectRoleNamesFromAvailability(availability),
     DEFAULT_AM_MANAGEMENT_ROLE,
     DEFAULT_PM_MANAGEMENT_ROLE,
+    DEFAULT_RBR_ROLE,
   ]) {
-    const trimmed = role.trim();
+    const trimmed = canonicalizeCatalogRole(role);
     if (!trimmed) continue;
     if (existing.has(trimmed.toLowerCase())) continue;
+    if (periodHasRbr && isRbrRole(trimmed)) continue;
     catalog.add(trimmed);
   }
 
