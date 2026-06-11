@@ -25,9 +25,11 @@ const cellBorder =
   "border border-[#d4d4d4] dark:border-zinc-700";
 const headerClass = `${cellBorder} bg-[#e8e8e8] px-2 py-1.5 text-left text-sm font-bold text-black dark:bg-zinc-800 dark:text-zinc-100`;
 const stickyHeaderClass = `${headerClass} sticky top-0 z-20`;
-const stickyCornerHeaderClass = `${headerClass} sticky left-0 top-0 z-30 shadow-[2px_2px_4px_-2px_rgba(0,0,0,0.12)] dark:shadow-[2px_2px_4px_-2px_rgba(0,0,0,0.4)]`;
+const stickyCornerHeaderClass = `${headerClass} sticky left-0 top-0 z-30 min-w-[12rem] shadow-[2px_2px_4px_-2px_rgba(0,0,0,0.12)] dark:shadow-[2px_2px_4px_-2px_rgba(0,0,0,0.4)]`;
 const bodyClass = `${cellBorder} px-2 py-1 text-left text-sm text-black dark:text-zinc-100`;
-const stickyRowHeaderClass = `${bodyClass} sticky left-0 z-10 bg-white dark:bg-zinc-950 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.12)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]`;
+const stickyRowHeaderClass = `${bodyClass} sticky left-0 z-10 min-w-[12rem] whitespace-nowrap bg-white dark:bg-zinc-950 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.12)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]`;
+const matrixScrollClass =
+  "max-h-[calc(100dvh-12rem)] overflow-auto [overflow-anchor:none]";
 const interactiveCellClass =
   "cursor-context-menu hover:ring-1 hover:ring-inset hover:ring-zinc-400/60 dark:hover:ring-zinc-500/60";
 
@@ -160,13 +162,14 @@ export function AvailabilityMatrix() {
 
   return (
     <>
-      <div className="overflow-auto rounded-sm border border-[#d4d4d4] bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-950">
+      <div className="rounded-sm border border-[#d4d4d4] bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-950">
         {hasUploadProtectedDays ? (
           <p className="border-b border-[#d4d4d4] px-3 py-2 text-xs text-sky-800 dark:border-zinc-700 dark:text-sky-300">
             Blue toggles kept your locked days when the latest availability upload
             tried to change them.
           </p>
         ) : null}
+        <div className={matrixScrollClass}>
         <table className="w-full min-w-[900px] border-separate border-spacing-0 text-sm">
           <thead>
             <tr>
@@ -252,6 +255,7 @@ export function AvailabilityMatrix() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {menu ? (
