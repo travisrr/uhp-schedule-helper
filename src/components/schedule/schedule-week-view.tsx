@@ -10,7 +10,7 @@ import {
 } from "@/components/schedule/schedule-shift-actions";
 import type { ShiftRef } from "@/lib/schedule-mutations";
 import { ensureMealPeriodManagementSlot } from "@/lib/schedule-management-roles";
-import { cn, DAYS, type DayKey } from "@/lib/utils";
+import { cn, DAY_LABELS, DAYS, type DayKey } from "@/lib/utils";
 import type { MealPeriodBlock, ScheduleData } from "@/lib/types";
 import { buildDayDateLabels, parseISODateString } from "@/lib/week-utils";
 
@@ -28,6 +28,7 @@ const CELL = `${BORDER} bg-white align-middle text-[13px] leading-snug text-blac
 const GAP = "border-0 bg-white p-0";
 const PERIOD = `${BORDER} bg-black px-2 py-1 text-center text-sm font-bold text-white`;
 const ROLE_HEADER = `${BORDER} bg-[#808080] px-2 py-1 text-center text-sm font-semibold text-white`;
+const DATE = `${BORDER} px-3 pt-4 text-sm font-bold`;
 const NAME_CELL = `${CELL} max-w-0 overflow-hidden text-ellipsis whitespace-nowrap px-3 py-1 text-left`;
 const SPACER_CELL = `${CELL} px-0 py-1`;
 const TIME_CELL = `${CELL} whitespace-nowrap px-2 py-1 text-right text-[12px] tabular-nums`;
@@ -178,12 +179,14 @@ function SideCells({
 
 function DaySection({
   day,
+  dateLabel,
   amBlock,
   pmBlock,
   isFirstDay,
   editable,
 }: {
   day: DayKey;
+  dateLabel: string;
   amBlock: MealPeriodBlock;
   pmBlock: MealPeriodBlock;
   isFirstDay: boolean;
@@ -193,17 +196,22 @@ function DaySection({
 
   return (
     <>
-      {!isFirstDay ? (
-        <tr>
-          <td
-            className={cn(
-              CELL,
-              "h-3 border-x border-t-0 border-b-0 p-0 leading-none",
-            )}
-            colSpan={9}
-          />
-        </tr>
-      ) : null}
+      <tr>
+        <td className={cn(DATE, isFirstDay && "pt-2")} colSpan={9}>
+          {dateLabel}
+        </td>
+      </tr>
+      <tr>
+        <td
+          className={cn(
+            CELL,
+            "h-2 border-x border-t-0 border-b-0 p-0 leading-none",
+          )}
+          colSpan={9}
+        >
+          &nbsp;
+        </td>
+      </tr>
       <tr>
         <td className={PERIOD} colSpan={4}>
           AM
@@ -276,11 +284,13 @@ function ScheduleWeekTable({
                 period: "PM" as const,
                 roles: [],
               };
+            const dateLabel = day.dateLabel ?? DAY_LABELS[day.day];
 
             return (
               <DaySection
                 key={day.day}
                 day={day.day}
+                dateLabel={dateLabel}
                 amBlock={amBlock}
                 pmBlock={pmBlock}
                 isFirstDay={dayIndex === 0}
