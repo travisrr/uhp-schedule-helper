@@ -33,7 +33,7 @@ const CELL = `${BORDER} bg-white align-middle text-[13px] leading-snug text-blac
 const GAP = "border-0 bg-white p-0";
 const PERIOD = `${BORDER} bg-black px-2 py-1 text-center text-sm font-bold text-white`;
 const ROLE_HEADER = `${BORDER} bg-[#808080] px-2 py-1 text-center text-sm font-semibold text-white`;
-const DATE = `${BORDER} px-3 pt-4 text-sm font-bold`;
+const DATE = `${BORDER} bg-[#6B8CAE] px-3 py-1.5 text-sm font-bold text-white`;
 const NAME_CELL = `${CELL} max-w-0 overflow-hidden text-ellipsis whitespace-nowrap px-3 py-1 text-left`;
 const SPACER_CELL = `${CELL} px-0 py-1`;
 const TIME_CELL = `${CELL} whitespace-nowrap px-2 py-1 text-right text-[12px] tabular-nums`;
@@ -209,7 +209,6 @@ function DaySection({
   dateLabel,
   amBlock,
   pmBlock,
-  isFirstDay,
   editable,
   locked,
   showLockToggle,
@@ -218,7 +217,6 @@ function DaySection({
   dateLabel: string;
   amBlock: MealPeriodBlock;
   pmBlock: MealPeriodBlock;
-  isFirstDay: boolean;
   editable: boolean;
   locked: boolean;
   showLockToggle: boolean;
@@ -229,7 +227,7 @@ function DaySection({
   return (
     <>
       <tr>
-        <td className={cn(DATE, isFirstDay && "pt-2")} colSpan={9}>
+        <td className={DATE} colSpan={9}>
           <div className="flex items-center justify-between gap-3">
             <span>{dateLabel}</span>
             {showLockToggle ? (
@@ -315,7 +313,7 @@ function ScheduleWeekTable({
       <table className="w-full min-w-[920px] table-fixed border-collapse text-sm">
         {SCHEDULE_COLGROUP}
         <tbody>
-          {orderedDays.map((day, dayIndex) => {
+          {orderedDays.map((day) => {
             if (!day) return null;
             const amBlock =
               day.mealPeriods.find((block) => block.period === "AM") ?? {
@@ -336,7 +334,6 @@ function ScheduleWeekTable({
                 dateLabel={dateLabel}
                 amBlock={amBlock}
                 pmBlock={pmBlock}
-                isFirstDay={dayIndex === 0}
                 editable={editable}
                 locked={isScheduleDayLocked(day)}
                 showLockToggle={showLockToggle}
