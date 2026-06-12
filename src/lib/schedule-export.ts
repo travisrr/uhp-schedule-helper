@@ -1,4 +1,4 @@
-import html2canvas from "html2canvas";
+import { toCanvas } from "html-to-image";
 import { jsPDF } from "jspdf";
 
 const PRINT_ROOT_ID = "schedule-print-root";
@@ -15,17 +15,16 @@ export function printSchedule(): void {
 
 export async function saveScheduleAsPdf(filename: string): Promise<void> {
   const root = getSchedulePrintRoot();
-  if (!root) return;
+  if (!root) {
+    throw new Error("Shift report table is not ready to export yet.");
+  }
 
-  const canvas = await html2canvas(root, {
-    scale: 2,
+  const canvas = await toCanvas(root, {
+    pixelRatio: 2,
     backgroundColor: "#ffffff",
-    useCORS: true,
-    logging: false,
+    cacheBust: true,
     width: root.scrollWidth,
     height: root.scrollHeight,
-    windowWidth: root.scrollWidth,
-    windowHeight: root.scrollHeight,
   });
 
   const imgData = canvas.toDataURL("image/png");

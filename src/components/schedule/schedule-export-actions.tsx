@@ -17,11 +17,19 @@ export function ScheduleExportActions({
   weekStartDate,
 }: ScheduleExportActionsProps) {
   const [isSavingPdf, setIsSavingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   async function handleSavePdf() {
     setIsSavingPdf(true);
+    setPdfError(null);
     try {
       await saveScheduleAsPdf(buildScheduleExportFilename(weekStartDate));
+    } catch (error) {
+      setPdfError(
+        error instanceof Error
+          ? error.message
+          : "Could not save the shift report as a PDF.",
+      );
     } finally {
       setIsSavingPdf(false);
     }
@@ -48,6 +56,11 @@ export function ScheduleExportActions({
         <FileDown className="size-4" />
         {isSavingPdf ? "Saving…" : "Save as PDF"}
       </Button>
+      {pdfError ? (
+        <p className="w-full text-right text-xs text-red-600" role="alert">
+          {pdfError}
+        </p>
+      ) : null}
     </div>
   );
 }
