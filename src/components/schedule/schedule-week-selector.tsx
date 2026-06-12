@@ -90,45 +90,68 @@ export function ScheduleWeekSelector() {
     );
   }
 
+  const statusLabel = canGenerate
+    ? `${employeeCount} employees`
+    : employeeCount > 0
+      ? `${employeeCount} employees · need baseline`
+      : "No availability data";
+
+  const baselineLabel = priorSchedule
+    ? `Baseline: ${priorSchedule.fileName}`
+    : "No prior baseline";
+
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-            <CalendarDays className="size-4 text-emerald-500" />
-            Schedule Week
-          </div>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Pick the Wed–Tue period, then generate shift assignments from your
-            prior schedule baseline and current availability.
+    <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="flex shrink-0 items-center gap-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+          <CalendarDays className="size-4 text-emerald-500" />
+          Schedule Week
+        </div>
+
+        <div
+          className="min-w-0 max-w-[180px] sm:max-w-[220px] lg:max-w-[280px]"
+          title={`${statusLabel}. ${baselineLabel}`}
+        >
+          <p className="truncate text-xs text-zinc-600 dark:text-zinc-400">
+            {statusLabel}
+          </p>
+          <p
+            className={cn(
+              "truncate text-[11px]",
+              priorSchedule
+                ? "text-emerald-700 dark:text-emerald-400"
+                : "text-zinc-500",
+            )}
+          >
+            {baselineLabel}
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-1 rounded-md border border-zinc-200 bg-zinc-50 p-1 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div
+            className="flex items-center gap-0.5 rounded-md border border-zinc-200 bg-zinc-50 p-0.5 dark:border-zinc-800 dark:bg-zinc-900"
+            title="Wednesday – Tuesday"
+          >
             <Button
               type="button"
               variant="ghost"
               size="icon"
+              className="size-7"
               onClick={handlePreviousWeek}
               aria-label="Previous week"
             >
               <ChevronLeft className="size-4" />
             </Button>
 
-            <div className="min-w-[180px] px-2 text-center">
-              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                {weekRangeLabel}
-              </p>
-              <p className="text-[11px] uppercase tracking-wide text-zinc-500">
-                Wednesday – Tuesday
-              </p>
-            </div>
+            <p className="min-w-[130px] px-1 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {weekRangeLabel}
+            </p>
 
             <Button
               type="button"
               variant="ghost"
               size="icon"
+              className="size-7"
               onClick={handleNextWeek}
               aria-label="Next week"
             >
@@ -136,44 +159,21 @@ export function ScheduleWeekSelector() {
             </Button>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-            <span className="whitespace-nowrap">Jump to date</span>
-            <input
-              type="date"
-              value={toISODateString(weekStart)}
-              onChange={handleDateChange}
-              className="h-9 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
-            />
-          </label>
-        </div>
-      </div>
+          <input
+            type="date"
+            value={toISODateString(weekStart)}
+            onChange={handleDateChange}
+            aria-label="Jump to date"
+            className="h-8 rounded-md border border-zinc-200 bg-white px-2 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+          />
 
-      <div className="mt-4 flex flex-col gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {canGenerate
-              ? `${employeeCount} employees loaded from availability.`
-              : employeeCount > 0
-                ? `${employeeCount} employees loaded. Import a prior schedule baseline to enable generation.`
-                : "No availability data yet. Upload a sheet in Settings to enable scheduling."}
-          </p>
-          {priorSchedule ? (
-            <p className="text-xs text-emerald-700 dark:text-emerald-400">
-              Prior schedule baseline active ({priorSchedule.fileName}).
-            </p>
-          ) : (
-            <p className="text-xs text-zinc-500">
-              No prior schedule baseline. Import one from the Prior Schedule page to seed role and time assignments.
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
           <ScheduleMetricsCards />
+
           <Button
             type="button"
             onClick={handleGenerateSchedule}
             disabled={!canGenerate}
+            size="sm"
             className="shrink-0"
           >
             <Sparkles className="size-4" />
@@ -185,7 +185,7 @@ export function ScheduleWeekSelector() {
       {statusMessage ? (
         <p
           className={cn(
-            "mt-3 text-sm",
+            "mt-2 border-t border-zinc-200 pt-2 text-xs dark:border-zinc-800",
             canGenerate
               ? "text-emerald-700 dark:text-emerald-400"
               : "text-amber-700 dark:text-amber-400",
