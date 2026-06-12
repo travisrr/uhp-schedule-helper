@@ -17,6 +17,10 @@ export const DAYS = [
 
 export type DayKey = (typeof DAYS)[number];
 
+export function isWeekendDay(day: DayKey): boolean {
+  return day === "Sat" || day === "Sun";
+}
+
 export const DAY_LABELS: Record<DayKey, string> = {
   Wed: "Wednesday",
   Thu: "Thursday",

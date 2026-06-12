@@ -14,6 +14,7 @@ import {
   parseISODateString,
   toISODateString,
 } from "@/lib/week-utils";
+import { ApplyShiftHoursControls } from "@/components/schedule/apply-shift-hours-controls";
 import { ScheduleMetricsCards } from "@/components/schedule/schedule-metrics-ribbon";
 import { cn } from "@/lib/utils";
 
@@ -193,6 +194,12 @@ export function ScheduleWeekSelector() {
         >
           {statusMessage}
         </p>
+      ) : null}
+
+      {schedule ? (
+        <div className="mt-2 border-t border-zinc-200 pt-2 dark:border-zinc-800">
+          <ApplyShiftHoursControls />
+        </div>
       ) : null}
     </div>
   );

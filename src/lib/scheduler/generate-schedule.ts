@@ -158,8 +158,7 @@ function generateFromPriorSchedule(
               timeRange:
                 priorTime ||
                 timeRangeForPeriod(mealPeriod.period, shiftHours, dayKey),
-              timeOverride:
-                shift.timeOverride ?? priorTime.length > 0,
+              timeOverride: shift.timeOverride ?? false,
             });
           }
         }

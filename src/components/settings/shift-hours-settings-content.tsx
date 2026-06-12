@@ -6,12 +6,16 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAppData } from "@/context/data-context";
+import { SlimToggle } from "@/components/ui/slim-toggle";
 import {
   createDefaultShiftHours,
+  DEFAULT_APPLY_SHIFT_HOURS_SCOPE,
   formatPeriodTimeRange,
+  hasApplyShiftHoursScope,
   isValidPeriodHours,
   isValidShiftHours,
   shiftHoursEqual,
+  type ApplyShiftHoursScope,
   type DayShiftHours,
   type PeriodHours,
   type ShiftHoursSettings,
@@ -124,6 +128,9 @@ function timeInputClassName(valid: boolean): string {
 export function ShiftHoursSettingsContent() {
   const { schedule, shiftHours, setSchedule, setShiftHours } = useAppData();
   const [draft, setDraft] = useState<ShiftHoursSettings>(shiftHours);
+  const [applyScope, setApplyScope] = useState<ApplyShiftHoursScope>(
+    DEFAULT_APPLY_SHIFT_HOURS_SCOPE,
+  );
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -146,16 +153,21 @@ export function ShiftHoursSettingsContent() {
     setStatusMessage("Reset to default shift hours.");
   }
 
+  const canApply =
+    canSave && schedule != null && hasApplyShiftHoursScope(applyScope);
+
   function handleApplyToSchedule() {
-    if (!canSave) return;
-    if (!schedule) {
-      setStatusMessage("No schedule loaded. Generate or import a schedule first.");
-      return;
-    }
+    if (!canApply) return;
 
     setShiftHours(draft);
-    setSchedule(applyShiftHoursToSchedule(schedule, draft));
-    setStatusMessage("Shift hours saved and applied to the current schedule.");
+    setSchedule(applyShiftHoursToSchedule(schedule, draft, applyScope));
+    const parts: string[] = [];
+    if (applyScope.weekdayAm) parts.push("weekday AM");
+    if (applyScope.weekdayPm) parts.push("weekday PM");
+    if (applyScope.weekend) parts.push("weekend");
+    setStatusMessage(
+      `Shift hours saved and applied to ${parts.join(", ")} shifts on the current schedule.`,
+    );
   }
 
   return (
@@ -220,21 +232,55 @@ export function ShiftHoursSettingsContent() {
           are left unchanged.
         </p>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Button type="button" onClick={handleSave} disabled={!canSave || !hasChanges}>
-            Save shift hours
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleApplyToSchedule}
-            disabled={!canSave || !schedule}
-          >
-            Apply to schedule
-          </Button>
-          <Button type="button" variant="outline" onClick={handleReset}>
-            Reset to defaults
-          </Button>
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Apply to schedule
+            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <SlimToggle
+                label="Weekday AM"
+                checked={applyScope.weekdayAm}
+                onCheckedChange={(weekdayAm) =>
+                  setApplyScope((prev) => ({ ...prev, weekdayAm }))
+                }
+                title="Apply weekday AM shift hours (Wed–Fri, Mon–Tue)"
+              />
+              <SlimToggle
+                label="Weekday PM"
+                checked={applyScope.weekdayPm}
+                onCheckedChange={(weekdayPm) =>
+                  setApplyScope((prev) => ({ ...prev, weekdayPm }))
+                }
+                title="Apply weekday PM shift hours (Wed–Fri, Mon–Tue)"
+              />
+              <SlimToggle
+                label="Weekend"
+                checked={applyScope.weekend}
+                onCheckedChange={(weekend) =>
+                  setApplyScope((prev) => ({ ...prev, weekend }))
+                }
+                title="Apply Saturday and Sunday AM and PM shift hours"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="button" onClick={handleSave} disabled={!canSave || !hasChanges}>
+              Save shift hours
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleApplyToSchedule}
+              disabled={!canApply}
+            >
+              Apply to schedule
+            </Button>
+            <Button type="button" variant="outline" onClick={handleReset}>
+              Reset to defaults
+            </Button>
+          </div>
         </div>
 
         {statusMessage ? (

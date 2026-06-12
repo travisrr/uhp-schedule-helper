@@ -5,7 +5,10 @@ import {
   normalizeScheduleAssignments,
 } from "@/lib/schedule-management-roles";
 import {
+  DEFAULT_APPLY_SHIFT_HOURS_SCOPE,
+  shouldApplyShiftHours,
   timeRangeForPeriod,
+  type ApplyShiftHoursScope,
   type ShiftHoursSettings,
 } from "@/lib/shift-hours";
 import {
@@ -413,6 +416,7 @@ export function swapShiftEmployees(
 export function applyShiftHoursToSchedule(
   schedule: ScheduleData,
   shiftHours: ShiftHoursSettings,
+  scope: ApplyShiftHoursScope = DEFAULT_APPLY_SHIFT_HOURS_SCOPE,
 ): ScheduleData {
   return normalizeScheduleAssignments({
     ...schedule,
@@ -421,31 +425,39 @@ export function applyShiftHoursToSchedule(
 
       return {
         ...day,
-        mealPeriods: day.mealPeriods.map((periodBlock) => ({
-          ...periodBlock,
-          roles: periodBlock.roles.map((roleBlock) => ({
-            ...roleBlock,
-            shifts: roleBlock.shifts.map((shift) => {
-              if (!shift.employee.trim()) {
-                return isFohManagementRole(roleBlock.role)
-                  ? { ...shift, timeRange: "", timeOverride: false }
-                  : shift;
-              }
+        mealPeriods: day.mealPeriods.map((periodBlock) => {
+          if (
+            !shouldApplyShiftHours(scope, day.day, periodBlock.period)
+          ) {
+            return periodBlock;
+          }
 
-              if (shift.timeOverride) return shift;
+          return {
+            ...periodBlock,
+            roles: periodBlock.roles.map((roleBlock) => ({
+              ...roleBlock,
+              shifts: roleBlock.shifts.map((shift) => {
+                if (!shift.employee.trim()) {
+                  return isFohManagementRole(roleBlock.role)
+                    ? { ...shift, timeRange: "", timeOverride: false }
+                    : shift;
+                }
 
-              return {
-                ...shift,
-                timeRange: timeRangeForPeriod(
-                  periodBlock.period,
-                  shiftHours,
-                  day.day,
-                ),
-                timeOverride: false,
-              };
-            }),
-          })),
-        })),
+                if (shift.timeOverride) return shift;
+
+                return {
+                  ...shift,
+                  timeRange: timeRangeForPeriod(
+                    periodBlock.period,
+                    shiftHours,
+                    day.day,
+                  ),
+                  timeOverride: false,
+                };
+              }),
+            })),
+          };
+        }),
       };
     }),
   });

@@ -1,5 +1,30 @@
 import { formatShiftTimeRange, isValidTimeToken } from "@/lib/time-format";
-import type { DayKey } from "@/lib/utils";
+import { isWeekendDay, type DayKey } from "@/lib/utils";
+
+export interface ApplyShiftHoursScope {
+  weekdayAm: boolean;
+  weekdayPm: boolean;
+  weekend: boolean;
+}
+
+export const DEFAULT_APPLY_SHIFT_HOURS_SCOPE: ApplyShiftHoursScope = {
+  weekdayAm: true,
+  weekdayPm: true,
+  weekend: true,
+};
+
+export function shouldApplyShiftHours(
+  scope: ApplyShiftHoursScope,
+  day: DayKey,
+  period: "AM" | "PM",
+): boolean {
+  if (isWeekendDay(day)) return scope.weekend;
+  return period === "AM" ? scope.weekdayAm : scope.weekdayPm;
+}
+
+export function hasApplyShiftHoursScope(scope: ApplyShiftHoursScope): boolean {
+  return scope.weekdayAm || scope.weekdayPm || scope.weekend;
+}
 
 export interface PeriodHours {
   start: string;
