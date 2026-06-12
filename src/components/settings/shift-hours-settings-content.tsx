@@ -11,6 +11,8 @@ import {
   formatPeriodTimeRange,
   isValidPeriodHours,
   isValidShiftHours,
+  shiftHoursEqual,
+  type DayShiftHours,
   type PeriodHours,
   type ShiftHoursSettings,
 } from "@/lib/shift-hours";
@@ -76,6 +78,40 @@ function PeriodHoursFields({
   );
 }
 
+function DayShiftHoursSection({
+  dayLabel,
+  idPrefix,
+  value,
+  onChange,
+}: {
+  dayLabel: string;
+  idPrefix: string;
+  value: DayShiftHours;
+  onChange: (next: DayShiftHours) => void;
+}) {
+  return (
+    <section className="space-y-4">
+      <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+        {dayLabel}
+      </h2>
+      <div className="grid gap-4">
+        <PeriodHoursFields
+          idPrefix={`${idPrefix}-am`}
+          label="AM shift"
+          value={value.am}
+          onChange={(am) => onChange({ ...value, am })}
+        />
+        <PeriodHoursFields
+          idPrefix={`${idPrefix}-pm`}
+          label="PM shift"
+          value={value.pm}
+          onChange={(pm) => onChange({ ...value, pm })}
+        />
+      </div>
+    </section>
+  );
+}
+
 function timeInputClassName(valid: boolean): string {
   return cn(
     "h-9 w-full rounded-md border bg-white px-3 text-sm text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100",
@@ -95,11 +131,7 @@ export function ShiftHoursSettingsContent() {
   }, [shiftHours]);
 
   const canSave = isValidShiftHours(draft);
-  const hasChanges =
-    draft.am.start !== shiftHours.am.start ||
-    draft.am.end !== shiftHours.am.end ||
-    draft.pm.start !== shiftHours.pm.start ||
-    draft.pm.end !== shiftHours.pm.end;
+  const hasChanges = !shiftHoursEqual(draft, shiftHours);
 
   function handleSave() {
     if (!canSave) return;
@@ -131,21 +163,55 @@ export function ShiftHoursSettingsContent() {
       title="Shift Hours"
       description="Set the standard start and end times used when generating schedules and assigning employees to open shifts."
     >
-      <div className="mx-auto max-w-3xl space-y-6">
-        <div className="grid gap-4">
-          <PeriodHoursFields
-            idPrefix="am-shift"
-            label="AM shift"
-            value={draft.am}
-            onChange={(am) => setDraft((prev) => ({ ...prev, am }))}
-          />
-          <PeriodHoursFields
-            idPrefix="pm-shift"
-            label="PM shift"
-            value={draft.pm}
-            onChange={(pm) => setDraft((prev) => ({ ...prev, pm }))}
-          />
-        </div>
+      <div className="mx-auto max-w-3xl space-y-8">
+        <section className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+              Weekdays
+            </h2>
+            <p className="text-sm text-zinc-500">
+              Used for Wednesday through Friday and Monday through Tuesday.
+            </p>
+          </div>
+          <div className="grid gap-4">
+            <PeriodHoursFields
+              idPrefix="am-shift"
+              label="AM shift"
+              value={draft.am}
+              onChange={(am) => setDraft((prev) => ({ ...prev, am }))}
+            />
+            <PeriodHoursFields
+              idPrefix="pm-shift"
+              label="PM shift"
+              value={draft.pm}
+              onChange={(pm) => setDraft((prev) => ({ ...prev, pm }))}
+            />
+          </div>
+        </section>
+
+        <DayShiftHoursSection
+          dayLabel="Saturday"
+          idPrefix="sat-shift"
+          value={draft.weekend.sat}
+          onChange={(sat) =>
+            setDraft((prev) => ({
+              ...prev,
+              weekend: { ...prev.weekend, sat },
+            }))
+          }
+        />
+
+        <DayShiftHoursSection
+          dayLabel="Sunday"
+          idPrefix="sun-shift"
+          value={draft.weekend.sun}
+          onChange={(sun) =>
+            setDraft((prev) => ({
+              ...prev,
+              weekend: { ...prev.weekend, sun },
+            }))
+          }
+        />
 
         <p className="text-sm text-zinc-500">
           Use 12-hour times like 10:30 AM or 4:00 PM. Saved defaults apply when a

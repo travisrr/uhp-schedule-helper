@@ -100,14 +100,14 @@ function generateFromAvailabilityOnly(
       if (canWorkAM(status)) {
         addShiftToRoleMap(amByRole, getRoleName(employee.role), {
           employee: employee.employee,
-          timeRange: timeRangeForPeriod("AM", shiftHours),
+          timeRange: timeRangeForPeriod("AM", shiftHours, dayKey),
         });
       }
 
       if (canWorkPM(status)) {
         addShiftToRoleMap(pmByRole, getRoleName(employee.role), {
           employee: employee.employee,
-          timeRange: timeRangeForPeriod("PM", shiftHours),
+          timeRange: timeRangeForPeriod("PM", shiftHours, dayKey),
         });
       }
     }
@@ -157,7 +157,7 @@ function generateFromPriorSchedule(
               employee: employee.employee,
               timeRange:
                 priorTime ||
-                timeRangeForPeriod(mealPeriod.period, shiftHours),
+                timeRangeForPeriod(mealPeriod.period, shiftHours, dayKey),
               timeOverride:
                 shift.timeOverride ?? priorTime.length > 0,
             });

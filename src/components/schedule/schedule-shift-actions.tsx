@@ -22,6 +22,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useAppData } from "@/context/data-context";
 import { listAddableRoles } from "@/lib/schedule-role-catalog";
+import { periodHoursForShift } from "@/lib/shift-hours";
 import {
   addRoleToPeriod,
   addShiftToRole,
@@ -150,7 +151,11 @@ export function ScheduleShiftActionProvider({
 
   const standardPeriodHours = useMemo(() => {
     if (!timeTarget || timeTarget.kind !== "time") return shiftHours.am;
-    return shiftHours[timeTarget.ref.period === "AM" ? "am" : "pm"];
+    return periodHoursForShift(
+      shiftHours,
+      timeTarget.ref.day,
+      timeTarget.ref.period,
+    );
   }, [shiftHours, timeTarget]);
 
   const addableRoles = useMemo(() => {

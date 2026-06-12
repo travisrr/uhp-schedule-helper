@@ -223,7 +223,7 @@ export function addShiftToRole(
 ): ScheduleData {
   const trimmedEmployee = employee.trim();
   const timeRange = trimmedEmployee
-    ? defaultTimeForPeriod(ref.period, shiftHours)
+    ? defaultTimeForPeriod(ref.period, shiftHours, ref.day)
     : "";
 
   return normalizeScheduleAssignments({
@@ -266,7 +266,8 @@ export function assignShiftEmployee(
   if (!shift) return schedule;
 
   const timeRange =
-    shift.timeRange.trim() || defaultTimeForPeriod(ref.period, shiftHours);
+    shift.timeRange.trim() ||
+    defaultTimeForPeriod(ref.period, shiftHours, ref.day);
 
   return normalizeScheduleAssignments({
     ...schedule,
@@ -435,7 +436,11 @@ export function applyShiftHoursToSchedule(
 
               return {
                 ...shift,
-                timeRange: timeRangeForPeriod(periodBlock.period, shiftHours),
+                timeRange: timeRangeForPeriod(
+                  periodBlock.period,
+                  shiftHours,
+                  day.day,
+                ),
                 timeOverride: false,
               };
             }),

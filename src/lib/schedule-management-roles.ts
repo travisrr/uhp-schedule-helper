@@ -5,6 +5,7 @@ import type {
   ScheduleDay,
   ShiftAssignment,
 } from "./types";
+import type { DayKey } from "./utils";
 import {
   DEFAULT_SHIFT_HOURS,
   timeRangeForPeriod,
@@ -30,8 +31,9 @@ export function defaultManagementRoleForPeriod(period: "AM" | "PM"): string {
 export function defaultTimeForPeriod(
   period: "AM" | "PM",
   shiftHours: ShiftHoursSettings = DEFAULT_SHIFT_HOURS,
+  day?: DayKey,
 ): string {
-  return timeRangeForPeriod(period, shiftHours);
+  return timeRangeForPeriod(period, shiftHours, day);
 }
 
 function createEmptyManagementShift(): ShiftAssignment {
