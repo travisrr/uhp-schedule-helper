@@ -50,6 +50,22 @@ body {
   color: rgb(236 253 245);
 }
 
+@keyframes stats-row-flash {
+  0% {
+    background-color: #fef08a;
+  }
+  35% {
+    background-color: #fde047;
+  }
+  100% {
+    background-color: #ffffff;
+  }
+}
+
+.stats-row-flash > td {
+  animation: stats-row-flash 1.25s ease-out;
+}
+
 @media print {
   @page {
     margin: 0.4in;

@@ -1,4 +1,5 @@
 import type { ScheduleData } from "./types";
+import type { DayKey } from "./utils";
 
 export interface EmployeeWeeklyStats {
   employee: string;
@@ -6,7 +7,10 @@ export interface EmployeeWeeklyStats {
   totalShifts: number;
   amShifts: number;
   pmShifts: number;
+  weekendShifts: number;
 }
+
+const WEEKEND_DAYS = new Set<DayKey>(["Sat", "Sun"]);
 
 function parseTimeToMinutes(time: string): number | null {
   const match = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
@@ -38,8 +42,41 @@ export function hoursFromTimeRange(timeRange: string): number | null {
   return durationMinutes / 60;
 }
 
-function normalizeEmployeeName(name: string): string {
+export function normalizeEmployeeKey(name: string): string {
   return name.trim().toLowerCase();
+}
+
+function employeeWeeklyStatsEqual(
+  left: EmployeeWeeklyStats,
+  right: EmployeeWeeklyStats,
+): boolean {
+  return (
+    left.totalHours === right.totalHours &&
+    left.totalShifts === right.totalShifts &&
+    left.amShifts === right.amShifts &&
+    left.pmShifts === right.pmShifts &&
+    left.weekendShifts === right.weekendShifts
+  );
+}
+
+/** Returns employee keys whose weekly totals differ from the previous snapshot. */
+export function findChangedEmployeeKeys(
+  previous: Map<string, EmployeeWeeklyStats>,
+  current: EmployeeWeeklyStats[],
+): Set<string> {
+  const changed = new Set<string>();
+  const currentByKey = new Map(
+    current.map((entry) => [normalizeEmployeeKey(entry.employee), entry]),
+  );
+
+  for (const [key, entry] of currentByKey) {
+    const prior = previous.get(key);
+    if (!prior || !employeeWeeklyStatsEqual(prior, entry)) {
+      changed.add(key);
+    }
+  }
+
+  return changed;
 }
 
 export function formatWeeklyHours(hours: number): string {
@@ -78,13 +115,16 @@ export function computeEmployeeWeeklyStats(
           const trimmed = shift.employee.trim();
           if (!trimmed) continue;
 
-          const key = normalizeEmployeeName(trimmed);
+          const key = normalizeEmployeeKey(trimmed);
           const existing = byKey.get(key);
+
+          const isWeekend = WEEKEND_DAYS.has(day.day);
 
           if (existing) {
             existing.totalShifts += 1;
             if (period.period === "AM") existing.amShifts += 1;
             else existing.pmShifts += 1;
+            if (isWeekend) existing.weekendShifts += 1;
 
             const hours = hoursFromTimeRange(shift.timeRange);
             if (hours !== null) existing.totalHours += hours;
@@ -98,6 +138,7 @@ export function computeEmployeeWeeklyStats(
             totalShifts: 1,
             amShifts: period.period === "AM" ? 1 : 0,
             pmShifts: period.period === "PM" ? 1 : 0,
+            weekendShifts: isWeekend ? 1 : 0,
           });
         }
       }
