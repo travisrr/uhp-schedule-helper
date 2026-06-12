@@ -360,7 +360,7 @@ function ScheduleWeekTable({
       <div className="flex flex-wrap items-start gap-4">
         {scheduleTable}
         <ScheduleEmployeeStatsPanel
-          className="no-print w-full min-w-[260px] flex-[1_1_280px] min-[1500px]:sticky min-[1500px]:top-4 min-[1500px]:max-w-[320px]"
+          className="no-print w-full min-w-[300px] flex-[1_1_320px] min-[1500px]:sticky min-[1500px]:top-4 min-[1500px]:max-w-[380px]"
           schedule={schedule}
         />
       </div>

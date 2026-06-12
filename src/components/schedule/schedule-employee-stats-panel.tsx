@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 const BORDER = "border border-black";
 const CELL = `${BORDER} bg-white align-middle text-[13px] leading-snug text-black`;
 const HEADER = `${BORDER} bg-black px-2 py-1 text-center text-sm font-bold text-white`;
-const SUBHEADER = `${BORDER} bg-[#808080] px-2 py-1 text-center text-xs font-semibold text-white`;
+const SUBHEADER = `${BORDER} max-w-0 overflow-hidden text-ellipsis whitespace-nowrap bg-[#808080] px-1.5 py-1 text-center text-[11px] font-semibold leading-tight text-white`;
 const NAME_CELL = `${CELL} max-w-0 overflow-hidden text-ellipsis whitespace-nowrap px-2 py-1 text-left font-medium`;
 const VALUE_CELL = `${CELL} whitespace-nowrap px-2 py-1 text-center tabular-nums`;
 
@@ -83,13 +83,13 @@ export function ScheduleEmployeeStatsPanel({
         className,
       )}
     >
-      <table className="w-full min-w-[320px] table-fixed border-collapse text-sm">
+      <table className="w-full min-w-[340px] table-fixed border-collapse text-sm">
         <colgroup>
-          <col style={{ width: "36%" }} />
-          <col style={{ width: "16%" }} />
+          <col style={{ width: "38%" }} />
+          <col style={{ width: "15%" }} />
           <col style={{ width: "14%" }} />
-          <col style={{ width: "14%" }} />
-          <col style={{ width: "20%" }} />
+          <col style={{ width: "15%" }} />
+          <col style={{ width: "18%" }} />
         </colgroup>
         <thead>
           <tr>
@@ -107,11 +107,11 @@ export function ScheduleEmployeeStatsPanel({
             <th className={SUBHEADER} scope="col">
               Shifts
             </th>
-            <th className={SUBHEADER} scope="col">
-              Weekend
+            <th className={SUBHEADER} scope="col" title="Weekend">
+              Wknd
             </th>
-            <th className={SUBHEADER} scope="col">
-              AM / PM
+            <th className={SUBHEADER} scope="col" title="AM / PM">
+              AM/PM
             </th>
           </tr>
         </thead>
