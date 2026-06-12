@@ -205,11 +205,6 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
 
         <div className="space-y-2 border-t border-zinc-200 p-2 dark:border-zinc-800">
           <ThemeToggle collapsed={collapsed} />
-          {!collapsed ? (
-            <p className="px-1 text-[11px] leading-relaxed text-black dark:text-zinc-300">
-              Import availability in Settings and a prior schedule to seed future weeks.
-            </p>
-          ) : null}
         </div>
       </aside>
 
