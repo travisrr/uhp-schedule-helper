@@ -32,7 +32,7 @@ import {
   getShiftTimeRange,
   isValidTimeToken,
   listAllEmployees,
-  listShiftsInPeriod,
+  listAllShifts,
   parseShiftTimeRange,
   shiftsMatch,
   swapShiftEmployees,
@@ -44,7 +44,7 @@ import {
 } from "@/lib/schedule-mutations";
 import type { ScheduleData } from "@/lib/types";
 import type { ScheduleUpdater } from "@/context/data-context";
-import { cn } from "@/lib/utils";
+import { cn, DAYS } from "@/lib/utils";
 
 type ContextMenuTarget =
   | { kind: "employee"; ref: ShiftRef; employee: string }
@@ -139,9 +139,17 @@ export function ScheduleShiftActionProvider({
   const swapCandidates = useMemo(() => {
     if (!swapTarget || swapTarget.kind !== "employee" || isAssigning) return [];
 
-    return listShiftsInPeriod(schedule, swapTarget.ref.day, swapTarget.ref.period).filter(
-      (entry) => !shiftsMatch(entry, swapTarget.ref),
-    );
+    const dayOrder = new Map(DAYS.map((day, index) => [day, index]));
+
+    return listAllShifts(schedule)
+      .filter((entry) => !shiftsMatch(entry, swapTarget.ref))
+      .sort((a, b) => {
+        const dayDiff =
+          (dayOrder.get(a.day) ?? 0) - (dayOrder.get(b.day) ?? 0);
+        if (dayDiff !== 0) return dayDiff;
+        if (a.period !== b.period) return a.period === "AM" ? -1 : 1;
+        return a.role.localeCompare(b.role);
+      });
   }, [isAssigning, schedule, swapTarget]);
 
   const parsedTimeRange = useMemo(() => {
@@ -581,7 +589,7 @@ function EmployeePickerDialog({
                 ? `Choose an employee to add to ${roleName || "this role"}. Names in red are outside their availability for this shift, but you can still select them.`
                 : isAssigning
                   ? "Choose an employee to assign to this shift. Names in red are outside their availability, but you can still select them."
-                  : `Choose another shift on the same day and meal period to swap with ${sourceEmployee || "this employee"}.`}
+                  : `Choose any shift on the schedule to swap with ${sourceEmployee || "this employee"}.`}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -639,13 +647,13 @@ function EmployeePickerDialog({
             )
           ) : swapCandidates.length === 0 ? (
             <p className="text-sm text-zinc-500">
-              No other shifts are available to swap on this day.
+              No other shifts are available to swap on this schedule.
             </p>
           ) : (
-            <div className="space-y-2">
+            <div className="max-h-[min(24rem,60vh)] space-y-2 overflow-y-auto">
               {swapCandidates.map((candidate) => (
                 <button
-                  key={`${candidate.role}-${candidate.shiftIndex}-${candidate.employee}`}
+                  key={`${candidate.day}-${candidate.period}-${candidate.role}-${candidate.shiftIndex}-${candidate.employee}`}
                   type="button"
                   className="flex w-full items-center justify-between gap-3 rounded-md border border-zinc-200 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
                   onClick={() => onSwap(candidate)}
@@ -654,7 +662,8 @@ function EmployeePickerDialog({
                     {candidate.employee.trim() || "—"}
                   </span>
                   <span className="text-xs text-zinc-500">
-                    {candidate.role} · {candidate.timeRange}
+                    {candidate.day} {candidate.period} · {candidate.role} ·{" "}
+                    {candidate.timeRange}
                   </span>
                 </button>
               ))}

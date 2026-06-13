@@ -76,33 +76,37 @@ export function shiftsMatch(a: ShiftRef, b: ShiftRef): boolean {
   return shiftRefKey(a) === shiftRefKey(b);
 }
 
+export function listAllShifts(schedule: ScheduleData): ShiftListing[] {
+  const listings: ShiftListing[] = [];
+
+  for (const dayBlock of schedule.days) {
+    for (const periodBlock of dayBlock.mealPeriods) {
+      for (const roleBlock of periodBlock.roles) {
+        roleBlock.shifts.forEach((shift, shiftIndex) => {
+          listings.push({
+            day: dayBlock.day,
+            period: periodBlock.period,
+            role: roleBlock.role,
+            shiftIndex,
+            employee: shift.employee,
+            timeRange: shift.timeRange,
+          });
+        });
+      }
+    }
+  }
+
+  return listings;
+}
+
 export function listShiftsInPeriod(
   schedule: ScheduleData,
   day: DayKey,
   period: "AM" | "PM",
 ): ShiftListing[] {
-  const dayBlock = schedule.days.find((entry) => entry.day === day);
-  if (!dayBlock) return [];
-
-  const periodBlock = dayBlock.mealPeriods.find((block) => block.period === period);
-  if (!periodBlock) return [];
-
-  const listings: ShiftListing[] = [];
-
-  for (const roleBlock of periodBlock.roles) {
-    roleBlock.shifts.forEach((shift, shiftIndex) => {
-      listings.push({
-        day,
-        period,
-        role: roleBlock.role,
-        shiftIndex,
-        employee: shift.employee,
-        timeRange: shift.timeRange,
-      });
-    });
-  }
-
-  return listings;
+  return listAllShifts(schedule).filter(
+    (entry) => entry.day === day && entry.period === period,
+  );
 }
 
 function normalizeEmployeeKey(name: string): string {
